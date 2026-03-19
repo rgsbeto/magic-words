@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Aprende a Leer">
+  <meta name="description" content="Aplicación educativa interactiva para aprender a leer. Primer grado.">
+  <title>¡Aprende a Leer!</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-512x512.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body, #root { width: 100%; height: 100%; overflow-x: hidden; }
+    body { font-family: 'Fredoka', sans-serif; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+    @keyframes popStar { 0% { transform: scale(0); opacity: 1; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+    @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    button { font-family: 'Fredoka', sans-serif; }
+    /* Splash screen */
+    #splash { position: fixed; inset: 0; background: linear-gradient(180deg, #667eea, #764ba2); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.5s; }
+    #splash.hide { opacity: 0; pointer-events: none; }
+    #splash h1 { color: white; font-size: 28px; font-family: 'Fredoka', sans-serif; margin-top: 16px; }
+    #splash p { color: rgba(255,255,255,0.7); font-size: 14px; font-family: 'Fredoka', sans-serif; margin-top: 8px; }
+    .splash-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 24px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <div style="font-size: 64px;">📚</div>
+    <h1>¡Aprende a Leer!</h1>
+    <p>Cargando...</p>
+    <div class="splash-spinner"></div>
+  </div>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef } = React;
+
+const VOWEL_COLORS = { a: "#4CAF50", e: "#F44336", i: "#9C27B0", o: "#FFC107", u: "#2196F3" };
+const CONSONANT_COLORS = { M: "#FF6B6B", P: "#4ECDC4", L: "#FFD93D", S: "#6C5CE7" };
+
+const SYLLABLE_WORDS = {
+  M: [
+    // MA
+    { word: "MANO", emoji: "✋", parts: ["MA", "NO"], blank: 0 },
+    { word: "MAPA", emoji: "🗺️", parts: ["MA", "PA"], blank: 0 },
+    { word: "MARIPOSA", emoji: "🦋", parts: ["MA", "RI", "PO", "SA"], blank: 0 },
+    { word: "MALETA", emoji: "🧳", parts: ["MA", "LE", "TA"], blank: 0 },
+    { word: "CAMA", emoji: "🛏️", parts: ["CA", "MA"], blank: 1 },
+    // ME
+    { word: "MELÓN", emoji: "🍈", parts: ["ME", "LÓN"], blank: 0 },
+    { word: "MEDUSA", emoji: "🪼", parts: ["ME", "DU", "SA"], blank: 0 },
+    { word: "CAMELLO", emoji: "🐫", parts: ["CA", "ME", "LLO"], blank: 1 },
+    // MI
+    { word: "MIEL", emoji: "🍯", parts: ["MI", "EL"], blank: 0 },
+    { word: "MICRÓFONO", emoji: "🎤", parts: ["MI", "CRÓ", "FO", "NO"], blank: 0 },
+    { word: "CAMISA", emoji: "👕", parts: ["CA", "MI", "SA"], blank: 1 },
+    { word: "HORMIGA", emoji: "🐜", parts: ["HOR", "MI", "GA"], blank: 1 },
+    // MO
+    { word: "MONO", emoji: "🐒", parts: ["MO", "NO"], blank: 0 },
+    { word: "MOTO", emoji: "🏍️", parts: ["MO", "TO"], blank: 0 },
+    { word: "MOSCA", emoji: "🪰", parts: ["MO", "SCA"], blank: 0 },
+    { word: "MOCHILA", emoji: "🎒", parts: ["MO", "CHI", "LA"], blank: 0 },
+    // MU
+    { word: "MULA", emoji: "🫏", parts: ["MU", "LA"], blank: 0 },
+    { word: "MUÑECA", emoji: "🪆", parts: ["MU", "ÑE", "CA"], blank: 0 },
+    { word: "MUNDO", emoji: "🌍", parts: ["MU", "NDO"], blank: 0 },
+    { word: "MÚSICA", emoji: "🎵", parts: ["MÚ", "SI", "CA"], blank: 0 },
+  ],
+  P: [
+    // PA
+    { word: "PATO", emoji: "🦆", parts: ["PA", "TO"], blank: 0 },
+    { word: "PALOMA", emoji: "🕊️", parts: ["PA", "LO", "MA"], blank: 0 },
+    { word: "PAPA", emoji: "🥔", parts: ["PA", "PA"], blank: 0 },
+    { word: "PANTALÓN", emoji: "👖", parts: ["PA", "NTA", "LÓN"], blank: 0 },
+    { word: "SOPA", emoji: "🍜", parts: ["SO", "PA"], blank: 1 },
+    { word: "MAPA", emoji: "🗺️", parts: ["MA", "PA"], blank: 1 },
+    // PE
+    { word: "PESO", emoji: "🏋️", parts: ["PE", "SO"], blank: 0 },
+    { word: "PERA", emoji: "🍐", parts: ["PE", "RA"], blank: 0 },
+    { word: "PERRO", emoji: "🐕", parts: ["PE", "RRO"], blank: 0 },
+    { word: "PELOTA", emoji: "⚽", parts: ["PE", "LO", "TA"], blank: 0 },
+    // PI
+    { word: "PICO", emoji: "⛏️", parts: ["PI", "CO"], blank: 0 },
+    { word: "PIÑA", emoji: "🍍", parts: ["PI", "ÑA"], blank: 0 },
+    { word: "PIZZA", emoji: "🍕", parts: ["PI", "ZZA"], blank: 0 },
+    { word: "PINTURA", emoji: "🎨", parts: ["PI", "NTU", "RA"], blank: 0 },
+    // PO
+    { word: "POLO", emoji: "🏇", parts: ["PO", "LO"], blank: 0 },
+    { word: "POLLO", emoji: "🍗", parts: ["PO", "LLO"], blank: 0 },
+    { word: "POMELO", emoji: "🍊", parts: ["PO", "ME", "LO"], blank: 0 },
+    // PU
+    { word: "PUMA", emoji: "🐆", parts: ["PU", "MA"], blank: 0 },
+    { word: "PUERTA", emoji: "🚪", parts: ["PU", "ER", "TA"], blank: 0 },
+    { word: "PULPO", emoji: "🐙", parts: ["PU", "LPO"], blank: 0 },
+  ],
+  L: [
+    // LA
+    { word: "LÁPIZ", emoji: "✏️", parts: ["LÁ", "PIZ"], blank: 0 },
+    { word: "LATA", emoji: "🥫", parts: ["LA", "TA"], blank: 0 },
+    { word: "LAGO", emoji: "🏞️", parts: ["LA", "GO"], blank: 0 },
+    { word: "LÁMPARA", emoji: "💡", parts: ["LÁ", "MPA", "RA"], blank: 0 },
+    { word: "PALA", emoji: "🔧", parts: ["PA", "LA"], blank: 1 },
+    { word: "SALA", emoji: "🛋️", parts: ["SA", "LA"], blank: 1 },
+    // LE
+    { word: "LEÓN", emoji: "🦁", parts: ["LE", "ÓN"], blank: 0 },
+    { word: "LECHE", emoji: "🥛", parts: ["LE", "CHE"], blank: 0 },
+    { word: "LENGUA", emoji: "👅", parts: ["LE", "NGUA"], blank: 0 },
+    { word: "MALETA", emoji: "🧳", parts: ["MA", "LE", "TA"], blank: 1 },
+    // LI
+    { word: "LIBRO", emoji: "📖", parts: ["LI", "BRO"], blank: 0 },
+    { word: "LIMA", emoji: "🍋", parts: ["LI", "MA"], blank: 0 },
+    { word: "LIMÓN", emoji: "🍋", parts: ["LI", "MÓN"], blank: 0 },
+    { word: "LIBÉLULA", emoji: "🪰", parts: ["LI", "BÉ", "LU", "LA"], blank: 0 },
+    // LO
+    { word: "LORO", emoji: "🦜", parts: ["LO", "RO"], blank: 0 },
+    { word: "LOBO", emoji: "🐺", parts: ["LO", "BO"], blank: 0 },
+    { word: "LODO", emoji: "💩", parts: ["LO", "DO"], blank: 0 },
+    { word: "PALO", emoji: "🪵", parts: ["PA", "LO"], blank: 1 },
+    { word: "PELO", emoji: "💇", parts: ["PE", "LO"], blank: 1 },
+    // LU
+    { word: "LUNA", emoji: "🌙", parts: ["LU", "NA"], blank: 0 },
+    { word: "LUPA", emoji: "🔍", parts: ["LU", "PA"], blank: 0 },
+    { word: "LUZ", emoji: "💡", parts: ["LU", "Z"], blank: 0 },
+    { word: "LUCHA", emoji: "🤼", parts: ["LU", "CHA"], blank: 0 },
+  ],
+  S: [
+    // SA
+    { word: "SAPO", emoji: "🐸", parts: ["SA", "PO"], blank: 0 },
+    { word: "SANDÍA", emoji: "🍉", parts: ["SA", "NDÍ", "A"], blank: 0 },
+    { word: "SALA", emoji: "🛋️", parts: ["SA", "LA"], blank: 0 },
+    { word: "SACO", emoji: "🎒", parts: ["SA", "CO"], blank: 0 },
+    { word: "VASO", emoji: "🥛", parts: ["VA", "SO"], blank: 1 },
+    // SE
+    { word: "SEMILLA", emoji: "🌱", parts: ["SE", "MI", "LLA"], blank: 0 },
+    { word: "SERPIENTE", emoji: "🐍", parts: ["SE", "RPIE", "NTE"], blank: 0 },
+    { word: "SELLO", emoji: "📮", parts: ["SE", "LLO"], blank: 0 },
+    { word: "SERVILLETA", emoji: "🧻", parts: ["SE", "RVI", "LLE", "TA"], blank: 0 },
+    // SI
+    { word: "SILLA", emoji: "🪑", parts: ["SI", "LLA"], blank: 0 },
+    { word: "SIRENA", emoji: "🧜", parts: ["SI", "RE", "NA"], blank: 0 },
+    { word: "SILBATO", emoji: "📯", parts: ["SI", "LBA", "TO"], blank: 0 },
+    { word: "CAMISA", emoji: "👕", parts: ["CA", "MI", "SA"], blank: 2 },
+    // SO
+    { word: "SOPA", emoji: "🍜", parts: ["SO", "PA"], blank: 0 },
+    { word: "SOL", emoji: "☀️", parts: ["SO", "L"], blank: 0 },
+    { word: "SOMBRERO", emoji: "🤠", parts: ["SO", "MBRE", "RO"], blank: 0 },
+    { word: "SONRISA", emoji: "😊", parts: ["SO", "NRI", "SA"], blank: 0 },
+    { word: "OSO", emoji: "🐻", parts: ["O", "SO"], blank: 1 },
+    // SU
+    { word: "SUMA", emoji: "➕", parts: ["SU", "MA"], blank: 0 },
+    { word: "SUÉTER", emoji: "🧥", parts: ["SU", "É", "TER"], blank: 0 },
+    { word: "SUBMARINO", emoji: "🛥️", parts: ["SU", "BMA", "RI", "NO"], blank: 0 },
+    { word: "SUPERMERCADO", emoji: "🏪", parts: ["SU", "PER", "MER", "CA", "DO"], blank: 0 },
+  ],
+};
+
+const READING_STORIES = [
+  {
+    title: "Mi pato Goyo",
+    emoji: "🦆",
+    text: "Este es mi pato.\nMi pato se llama Goyo.\nGoyo es muy ruidoso.\nÉl es de color blanco.\nA Goyo le gusta nadar en el lago.",
+    questions: [
+      { q: "¿Quién es Goyo?", options: ["Un perico", "Un tucán", "Un pato"], answer: 2 },
+      { q: "¿De qué color es Goyo?", options: ["Blanco", "Amarillo", "Verde"], answer: 0 },
+      { q: "¿Cómo es Goyo?", options: ["Travieso", "Ruidoso", "Tramposo"], answer: 1 },
+      { q: "¿Qué le gusta a Goyo?", options: ["Nadar en el lago", "Dormir en el lago", "Mirar el lago"], answer: 0 },
+    ],
+  },
+  {
+    title: "Mi oso Lolo",
+    emoji: "🧸",
+    text: "Este es mi oso.\nMi oso se llama Lolo.\nLolo es muy amoroso.\nÉl es de color café.\nA Lolo le gusta comer frutas.",
+    questions: [
+      { q: "¿Quién es Lolo?", options: ["Un gorila", "Un oso", "Un ratón"], answer: 1 },
+      { q: "¿De qué color es Lolo?", options: ["Negro", "Rosa", "Café"], answer: 2 },
+      { q: "¿Cómo es Lolo?", options: ["Amoroso", "Tímido", "Enojón"], answer: 0 },
+      { q: "¿Qué le gusta a Lolo?", options: ["Comer frutas", "Comer verduras", "Comer miel"], answer: 0 },
+    ],
+  },
+];
+
+const VALID_WORDS = {
+  // 2 sílabas - palabras reales formables con las tarjetas M,P,L,S + vocales
+  "MAMA": "👩", "MESA": "🍽️", "MISA": "⛪", "MASA": "🫓", "MAPA": "🗺️",
+  "MULA": "🫏", "MUSA": "🎭", "MOLE": "🍲", "MASO": "🔨", "MALO": "👎",
+  "MELO": "🍈", "MIMO": "🤡", "MILI": "💂",
+  "PAPA": "🥔", "PUMA": "🐆", "PALA": "⛏️", "PALO": "🪵", "PASO": "👣",
+  "PASE": "🎫", "PESO": "🏋️", "PISO": "🏠", "POLO": "🏇", "POSE": "📸",
+  "PUSE": "✅", "PULE": "✨", "PILE": "🔋", "PIPA": "🪈",
+  "LUPA": "🔍", "LIMA": "🍋", "LOMA": "⛰️", "LISO": "🧊", "LOMO": "🥩",
+  "LOSA": "🧱", "SUMA": "➕", "SALA": "🛋️", "SOPA": "🍜", "SOLO": "1️⃣",
+  "SAPO": "🐸", "SILO": "🏗️", "SOLA": "🧍", "SOME": "😴",
+  "SUMO": "🤼", "SUME": "➕", "SEMI": "½",
+  "LEMA": "📜", "LELO": "😵", "PELA": "🍌",
+  "POMO": "🫙", "MAMI": "👩",
+  "PAPI": "👨", "LAMA": "🦙", "SUPE": "🧠", "SUPO": "💡",
+  "PELI": "🎬", "MULO": "🫏", "LAME": "👅",
+  // Palabras con vocales solas
+  "AMO": "❤️", "AME": "💕", "ASA": "🍖", "ASO": "🍖", "ALA": "🪽",
+  "APE": "🐒", "OSO": "🐻", "OLA": "🌊", "OLE": "💃",
+  "UNO": "1️⃣", "USA": "🇺🇸", "UPA": "🙌", "UVA": "🍇",
+  "EMA": "📧", "ESO": "👆", "ESA": "👉",
+  "ISA": "👧",
+  "AMA": "❤️", "AMI": "👋",
+  "ALO": "📞", "ALI": "👧", "ALE": "🍺",
+  "ELE": "🔤", "EMU": "🪶",
+  "IMA": "🧲",
+  "OPE": "👨‍⚕️",
+  "ULE": "🌿",
+  // vocal + sílaba consonante
+  "ALMA": "✨", "ASPA": "🌀", "ISLA": "🏝️", "ALMO": "🌳",
+  "OLMO": "🌳", "ASMA": "😮‍💨", "ALPE": "🏔️",
+  // sílaba + vocal
+  "MAMI": "👩", "PAPI": "👨", "PASE": "🎫",
+  "SALI": "🚶", "SALE": "🚪", "MOLE": "🍲",
+  "PILE": "🔋", "POLO": "🏇", "PISO": "🏠",
+  "PESO": "🏋️", "MESA": "🍽️",
+  // 3 sílabas
+  "MALETA": "🧳", "PALOMA": "🕊️", "PELUSA": "🧶", "SOLAPA": "📁",
+  "PASAME": "🤲", "POMELO": "🍊", "PILUSO": "🎩",
+  "PALETA": "🍭", "AMOLE": "🧼", "AMASE": "🫓",
+  "ALAMO": "🌳", "ASUME": "🤔", "ASOLE": "☀️",
+};
+
+const ALL_SYLLABLE_CARDS = [
+  "MA", "ME", "MI", "MO", "MU",
+  "PA", "PE", "PI", "PO", "PU",
+  "LA", "LE", "LI", "LO", "LU",
+  "SA", "SE", "SI", "SO", "SU",
+];
+
+const IMAGE_WORDS = [
+  // LA
+  { emoji: "🥫", word: "LATA", options: ["LATA", "LOTA", "LUTA"] },
+  // LE
+  { emoji: "🦁", word: "LEÓN", options: ["LEÓN", "LIÓN", "LÓN"] },
+  { emoji: "🥛", word: "LECHE", options: ["LUCHE", "LECHE", "LICHE"] },
+  // LI
+  { emoji: "📖", word: "LIBRO", options: ["LIBRO", "LOBRO", "LABRO"] },
+  { emoji: "🍋", word: "LIMA", options: ["LUMA", "LAMA", "LIMA"] },
+  // LO
+  { emoji: "🦜", word: "LORO", options: ["LURO", "LORO", "LARO"] },
+  { emoji: "🐺", word: "LOBO", options: ["LOBO", "LUBO", "LABO"] },
+  // LU
+  { emoji: "🌙", word: "LUNA", options: ["LANA", "LUNA", "LONA"] },
+  { emoji: "🔍", word: "LUPA", options: ["LOPA", "LIPA", "LUPA"] },
+  // MA
+  { emoji: "✋", word: "MANO", options: ["MONO", "MENO", "MANO"] },
+  { emoji: "🗺️", word: "MAPA", options: ["MAPA", "MOPA", "MUPA"] },
+  { emoji: "🦋", word: "MARIPOSA", options: ["MARIPOSA", "MERIPOSA", "MURIPOSA"] },
+  // ME
+  { emoji: "🍈", word: "MELÓN", options: ["MOLÓN", "MELÓN", "MULÓN"] },
+  // MI
+  { emoji: "🎤", word: "MICRÓFONO", options: ["MUCRÓFONO", "MACRÓFONO", "MICRÓFONO"] },
+  // MO
+  { emoji: "🐒", word: "MONO", options: ["MANO", "MONO", "MENO"] },
+  { emoji: "🏍️", word: "MOTO", options: ["MATO", "MUTO", "MOTO"] },
+  // MU
+  { emoji: "🦇", word: "MURCIÉLAGO", options: ["MARCIÉLAGO", "MURCIÉLAGO", "MIRCIÉLAGO"] },
+  // PA
+  { emoji: "🥔", word: "PAPA", options: ["POPA", "PUPA", "PAPA"] },
+  { emoji: "🕊️", word: "PALOMA", options: ["PALOMA", "POLOMA", "PULOMA"] },
+  // PE
+  { emoji: "🐕", word: "PERRO", options: ["PARRO", "PERRO", "PIRRO"] },
+  { emoji: "🍐", word: "PERA", options: ["PERA", "PURA", "PARA"] },
+  // PI
+  { emoji: "🍕", word: "PIZZA", options: ["POZZA", "PUZZA", "PIZZA"] },
+  { emoji: "🍍", word: "PIÑA", options: ["PUÑA", "PIÑA", "PAÑA"] },
+  // PO
+  { emoji: "🐔", word: "POLLO", options: ["PALLO", "PULLO", "POLLO"] },
+  // PU
+  { emoji: "🚪", word: "PUERTA", options: ["PUERTA", "PIERTA", "PAERTA"] },
+  // SA
+  { emoji: "🐸", word: "SAPO", options: ["SIPO", "SUPO", "SAPO"] },
+  { emoji: "🍉", word: "SANDÍA", options: ["SUNDÍA", "SANDÍA", "SINDÍA"] },
+  // SE
+  { emoji: "🐍", word: "SERPIENTE", options: ["SIRPIENTE", "SURPIENTE", "SERPIENTE"] },
+  // SI
+  { emoji: "🪑", word: "SILLA", options: ["SOLLA", "SILLA", "SULLA"] },
+  // SO
+  { emoji: "☀️", word: "SOL", options: ["SOL", "SAL", "SUL"] },
+  { emoji: "🍜", word: "SOPA", options: ["SEPA", "SOPA", "SIPA"] },
+  // SU
+  { emoji: "🧥", word: "SUÉTER", options: ["SUÉTER", "SIÉTER", "SOÉTER"] },
+  // BONUS
+  { emoji: "🐻", word: "OSO", options: ["OSU", "ESO", "OSO"] },
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateVowelGrid() {
+  const vowels = ["a", "e", "i", "o", "u"];
+  return Array.from({ length: 48 }, () => vowels[Math.floor(Math.random() * 5)]);
+}
+
+function StarBurst({ x, y }) {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setVisible(false), 600); return () => clearTimeout(t); }, []);
+  if (!visible) return null;
+  return (
+    <div style={{ position: "fixed", left: x - 20, top: y - 20, pointerEvents: "none", zIndex: 9999, fontSize: 40, animation: "popStar 0.6s ease-out forwards" }}>
+      ⭐
+    </div>
+  );
+}
+
+function ConfettiEffect({ show }) {
+  if (!show) return null;
+  const pieces = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.5,
+    color: ["#FF6B6B", "#4ECDC4", "#FFD93D", "#6C5CE7", "#FF9FF3", "#54A0FF"][Math.floor(Math.random() * 6)],
+    size: 8 + Math.random() * 12,
+    rotation: Math.random() * 360,
+  }));
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none", zIndex: 9999, overflow: "hidden" }}>
+      {pieces.map(p => (
+        <div key={p.id} style={{
+          position: "absolute", top: -20, left: `${p.left}%`, width: p.size, height: p.size,
+          backgroundColor: p.color, borderRadius: p.size > 14 ? "50%" : "2px",
+          transform: `rotate(${p.rotation}deg)`,
+          animation: `confettiFall 2s ease-in ${p.delay}s forwards`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function ScoreBar({ score, total, label }) {
+  const pct = total > 0 ? (score / total) * 100 : 0;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", background: "rgba(255,255,255,0.3)", borderRadius: 20, backdropFilter: "blur(8px)" }}>
+      <span style={{ fontSize: 22 }}>⭐</span>
+      <div style={{ flex: 1, height: 14, background: "rgba(0,0,0,0.1)", borderRadius: 7, overflow: "hidden", minWidth: 100 }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #FFD700, #FFA500)", borderRadius: 7, transition: "width 0.5s ease" }} />
+      </div>
+      <span style={{ fontWeight: 700, fontSize: 16, color: "#333" }}>{score}/{total}</span>
+    </div>
+  );
+}
+
+/* ===== ACTIVITY: VOWEL FINDER ===== */
+function VowelFinder({ onBack }) {
+  const [targetVowel, setTargetVowel] = useState("a");
+  const [grid, setGrid] = useState(() => generateVowelGrid());
+  const [tapped, setTapped] = useState(new Set());
+  const [stars, setStars] = useState([]);
+  const [score, setScore] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const total = grid.filter(v => v === targetVowel).length;
+
+  const handleTap = (idx, e) => {
+    if (tapped.has(idx)) return;
+    if (grid[idx] === targetVowel) {
+      setTapped(prev => new Set([...prev, idx]));
+      setScore(prev => prev + 1);
+      setStars(prev => [...prev, { id: Date.now(), x: e.clientX, y: e.clientY }]);
+      if (score + 1 === total) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 2500);
+      }
+    }
+  };
+
+  const nextVowel = () => {
+    const vowels = ["a", "e", "i", "o", "u"];
+    const next = vowels[(vowels.indexOf(targetVowel) + 1) % 5];
+    setTargetVowel(next);
+    setGrid(generateVowelGrid());
+    setTapped(new Set());
+    setScore(0);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #FFECD2 0%, #FCB69F 100%)", padding: "16px 12px" }}>
+      <ConfettiEffect show={showConfetti} />
+      {stars.map(s => <StarBurst key={s.id} x={s.x} y={s.y} />)}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
+        <ScoreBar score={score} total={total} />
+      </div>
+      <div style={{ textAlign: "center", marginBottom: 12 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 14, background: "white", padding: "10px 28px", borderRadius: 24, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+          <span style={{ fontSize: 20, fontWeight: 600, color: "#555", fontFamily: "'Fredoka', sans-serif" }}>Toca la letra:</span>
+          <span style={{ fontSize: 52, fontWeight: 800, color: VOWEL_COLORS[targetVowel], fontFamily: "'Fredoka', sans-serif", lineHeight: 1 }}>{targetVowel}</span>
+        </div>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6, maxWidth: 500, margin: "0 auto" }}>
+        {grid.map((letter, i) => {
+          const isTarget = letter === targetVowel;
+          const isTapped = tapped.has(i);
+          return (
+            <button key={i} onClick={(e) => handleTap(i, e)} style={{
+              width: "100%", aspectRatio: "1", borderRadius: "50%", border: "3px solid " + (isTapped ? VOWEL_COLORS[targetVowel] : "#ddd"),
+              background: isTapped ? VOWEL_COLORS[targetVowel] : "white",
+              color: isTapped ? "white" : "#555",
+              fontSize: 22, fontWeight: 700, fontFamily: "'Fredoka', sans-serif",
+              cursor: "pointer", transition: "all 0.2s", transform: isTapped ? "scale(0.9)" : "scale(1)",
+              boxShadow: isTapped ? `0 0 12px ${VOWEL_COLORS[targetVowel]}50` : "0 2px 6px rgba(0,0,0,0.08)",
+            }}>
+              {letter}
+            </button>
+          );
+        })}
+      </div>
+      {score === total && (
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <div style={{ fontSize: 28, marginBottom: 8, fontFamily: "'Fredoka', sans-serif" }}>🎉 ¡Muy bien!</div>
+          <button onClick={nextVowel} style={{ ...styles.primaryBtn, background: VOWEL_COLORS[targetVowel] }}>
+            Siguiente vocal →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== ACTIVITY: SYLLABLE COMPLETE ===== */
+function SyllableComplete({ letter, onBack }) {
+  const allWords = SYLLABLE_WORDS[letter];
+  const [words, setWords] = useState(() => shuffle(allWords).slice(0, 10));
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const syllables = [`${letter}A`, `${letter}E`, `${letter}I`, `${letter}O`, `${letter}U`];
+  const current = words[currentIdx];
+  const correctSyllable = current.parts[current.blank].replace(/[ÁÉÍÓÚ]/g, m => ({ Á: "A", É: "E", Í: "I", Ó: "O", Ú: "U" }[m]));
+
+  const handleSelect = (syl) => {
+    if (selected !== null) return;
+    setSelected(syl);
+    if (syl === correctSyllable) {
+      setScore(prev => prev + 1);
+      if (currentIdx === words.length - 1) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 2500);
+      }
+    }
+    setTimeout(() => {
+      if (currentIdx < words.length - 1) {
+        setCurrentIdx(prev => prev + 1);
+        setSelected(null);
+      }
+    }, 1200);
+  };
+
+  const reset = () => { setWords(shuffle(allWords).slice(0, 10)); setCurrentIdx(0); setScore(0); setSelected(null); };
+  const color = CONSONANT_COLORS[letter];
+
+  return (
+    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg, ${color}22 0%, ${color}44 100%)`, padding: "16px 12px" }}>
+      <ConfettiEffect show={showConfetti} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
+        <ScoreBar score={score} total={words.length} />
+      </div>
+      <div style={{ textAlign: "center", marginBottom: 8 }}>
+        <span style={{ background: color, color: "white", padding: "6px 24px", borderRadius: 20, fontSize: 18, fontWeight: 700, fontFamily: "'Fredoka', sans-serif" }}>
+          Sílabas con {letter} ({currentIdx + 1}/{words.length})
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, marginTop: 16 }}>
+        <div style={{ fontSize: 80, lineHeight: 1 }}>{current.emoji}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+          {current.parts.map((part, i) => (
+            <span key={i} style={{
+              fontSize: 42, fontWeight: 800, fontFamily: "'Fredoka', sans-serif",
+              color: i === current.blank ? color : "#333",
+              background: i === current.blank ? (selected ? (selected === correctSyllable ? "#C8E6C9" : "#FFCDD2") : `${color}20`) : "transparent",
+              padding: "4px 12px", borderRadius: 12, minWidth: 60, textAlign: "center",
+              border: i === current.blank ? `3px dashed ${color}` : "none",
+            }}>
+              {i === current.blank ? (selected || "___") : part}
+            </span>
+          ))}
+        </div>
+        {selected && (
+          <div style={{ fontSize: 36, animation: "popIn 0.3s ease" }}>
+            {selected === correctSyllable ? "✅ ¡Correcto!" : `❌ Era: ${current.parts[current.blank]}`}
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 8 }}>
+          {syllables.map(syl => (
+            <button key={syl} onClick={() => handleSelect(syl)} disabled={selected !== null} style={{
+              fontSize: 30, fontWeight: 700, fontFamily: "'Fredoka', sans-serif",
+              padding: "12px 24px", borderRadius: 16, border: `3px solid ${color}`,
+              background: selected === syl ? (syl === correctSyllable ? "#4CAF50" : "#F44336") : "white",
+              color: selected === syl ? "white" : color,
+              cursor: selected ? "default" : "pointer", transition: "all 0.2s",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", minWidth: 70,
+              opacity: selected && selected !== syl ? 0.5 : 1,
+            }}>
+              {syl}
+            </button>
+          ))}
+        </div>
+      </div>
+      {currentIdx === words.length - 1 && selected && (
+        <div style={{ textAlign: "center", marginTop: 24 }}>
+          <div style={{ fontSize: 28, fontFamily: "'Fredoka', sans-serif", marginBottom: 12 }}>
+            🌟 ¡Terminaste! {score}/{words.length}
+          </div>
+          <button onClick={reset} style={{ ...styles.primaryBtn, background: color }}>Jugar de nuevo 🔄</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== ACTIVITY: READING COMPREHENSION ===== */
+function ReadingComp({ onBack }) {
+  const [storyIdx, setStoryIdx] = useState(0);
+  const [questionIdx, setQuestionIdx] = useState(-1);
+  const [answers, setAnswers] = useState({});
+  const [showConfetti, setShowConfetti] = useState(false);
+  const story = READING_STORIES[storyIdx];
+  const score = Object.values(answers).filter(Boolean).length;
+
+  const handleAnswer = (qIdx, aIdx) => {
+    if (answers[qIdx] !== undefined) return;
+    const correct = story.questions[qIdx].answer === aIdx;
+    setAnswers(prev => ({ ...prev, [qIdx]: correct }));
+    if (Object.keys(answers).length + 1 === story.questions.length && correct) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2500);
+    }
+  };
+
+  const nextStory = () => {
+    setStoryIdx((storyIdx + 1) % READING_STORIES.length);
+    setQuestionIdx(-1);
+    setAnswers({});
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)", padding: "16px 12px" }}>
+      <ConfettiEffect show={showConfetti} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
+        <ScoreBar score={score} total={story.questions.length} />
+      </div>
+      {questionIdx === -1 ? (
+        <div style={{ maxWidth: 500, margin: "0 auto" }}>
+          <div style={{ background: "white", borderRadius: 24, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <span style={{ fontSize: 64 }}>{story.emoji}</span>
+              <h2 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, color: "#2E7D32", margin: "8px 0" }}>{story.title}</h2>
+            </div>
+            <div style={{ fontSize: 22, lineHeight: 1.8, fontFamily: "'Fredoka', sans-serif", color: "#333", textAlign: "center", whiteSpace: "pre-line" }}>
+              {story.text}
+            </div>
+          </div>
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <button onClick={() => setQuestionIdx(0)} style={{ ...styles.primaryBtn, background: "#4CAF50", fontSize: 22 }}>
+              📝 Responder preguntas
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ maxWidth: 500, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 12 }}>
+            <span style={{ background: "#4CAF50", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 16, fontWeight: 700, fontFamily: "'Fredoka', sans-serif" }}>
+              Pregunta {questionIdx + 1} de {story.questions.length}
+            </span>
+          </div>
+          <div style={{ background: "white", borderRadius: 24, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
+            <p style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Fredoka', sans-serif", color: "#333", textAlign: "center", marginBottom: 20 }}>
+              {story.questions[questionIdx].q}
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {story.questions[questionIdx].options.map((opt, i) => {
+                const answered = answers[questionIdx] !== undefined;
+                const isCorrect = story.questions[questionIdx].answer === i;
+                const wasSelected = answered && ((isCorrect && answers[questionIdx]) || (!isCorrect && !answers[questionIdx] && i !== story.questions[questionIdx].answer));
+                return (
+                  <button key={i} onClick={() => handleAnswer(questionIdx, i)} disabled={answered} style={{
+                    padding: "14px 20px", borderRadius: 16, fontSize: 22, fontWeight: 600,
+                    fontFamily: "'Fredoka', sans-serif", cursor: answered ? "default" : "pointer",
+                    border: `3px solid ${answered ? (isCorrect ? "#4CAF50" : "#ddd") : "#4CAF50"}`,
+                    background: answered ? (isCorrect ? "#C8E6C9" : "white") : "white",
+                    color: "#333", transition: "all 0.2s", textAlign: "left",
+                  }}>
+                    {answered && isCorrect && "✅ "}{opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 16 }}>
+            {questionIdx > 0 && (
+              <button onClick={() => setQuestionIdx(questionIdx - 1)} style={{ ...styles.primaryBtn, background: "#78909C" }}>← Anterior</button>
+            )}
+            {questionIdx < story.questions.length - 1 && answers[questionIdx] !== undefined && (
+              <button onClick={() => setQuestionIdx(questionIdx + 1)} style={{ ...styles.primaryBtn, background: "#4CAF50" }}>Siguiente →</button>
+            )}
+            {questionIdx === story.questions.length - 1 && answers[questionIdx] !== undefined && (
+              <button onClick={nextStory} style={{ ...styles.primaryBtn, background: "#FF9800" }}>Otra historia 📖</button>
+            )}
+          </div>
+          <div style={{ textAlign: "center", marginTop: 8 }}>
+            <button onClick={() => setQuestionIdx(-1)} style={{ fontSize: 14, color: "#666", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+              Volver a leer
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ===== ACTIVITY: WORD BUILDER (Syllable Cards) ===== */
+function WordBuilder({ onBack }) {
+  const totalWords = Object.keys(VALID_WORDS).length;
+  const [slots, setSlots] = useState([null, null]);
+  const [found, setFound] = useState([]);
+  const [feedback, setFeedback] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [slotCount, setSlotCount] = useState(2);
+  const feedbackTimer = useRef(null);
+
+  const handleCardTap = (syl) => {
+    if (feedback) return;
+    const emptySlot = slots.indexOf(null);
+    if (emptySlot === -1) return;
+    const ns = [...slots];
+    ns[emptySlot] = syl;
+    setSlots(ns);
+  };
+
+  const removeSlot = (idx) => {
+    if (feedback) return;
+    const ns = [...slots];
+    ns[idx] = null;
+    setSlots(ns);
+  };
+
+  const clearSlots = () => {
+    if (feedback) return;
+    setSlots(Array(slotCount).fill(null));
+  };
+
+  const changeSlotCount = (n) => {
+    setSlots(Array(n).fill(null));
+    setSlotCount(n);
+    setFeedback(null);
+  };
+
+  const checkWord = () => {
+    if (slots.includes(null)) return;
+    const word = slots.join("");
+    if (found.includes(word)) {
+      setFeedback({ type: "repeat", word });
+    } else if (VALID_WORDS[word]) {
+      setFeedback({ type: "correct", word, emoji: VALID_WORDS[word] });
+      setFound(prev => [...prev, word]);
+      if (found.length + 1 >= 15) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 2500);
+      }
+    } else {
+      setFeedback({ type: "wrong", word });
+    }
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = setTimeout(() => {
+      setSlots(Array(slotCount).fill(null));
+      setFeedback(null);
+    }, 1500);
+  };
+
+  const reset = () => {
+    setSlots(Array(2).fill(null));
+    setSlotCount(2);
+    setFound([]);
+    setFeedback(null);
+  };
+
+  const filledCount = slots.filter(Boolean).length;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)", padding: "16px 12px" }}>
+      <ConfettiEffect show={showConfetti} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.3)", padding: "6px 14px", borderRadius: 20, backdropFilter: "blur(8px)" }}>
+          <span style={{ fontSize: 20 }}>🧩</span>
+          <span style={{ fontWeight: 700, fontSize: 16, color: "#333", fontFamily: "'Fredoka', sans-serif" }}>{found.length} palabras</span>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 500, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ marginBottom: 10 }}>
+          <h2 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 22, color: "#E65100", margin: "0 0 4px" }}>
+            🧩 ¡Forma palabras!
+          </h2>
+          <p style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 14, color: "#888" }}>
+            Combina las tarjetas de sílabas
+          </p>
+        </div>
+
+        {/* Slot count selector */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 14 }}>
+          {[2, 3].map(n => (
+            <button key={n} onClick={() => changeSlotCount(n)} style={{
+              padding: "6px 18px", borderRadius: 14, fontSize: 14, fontWeight: 700,
+              fontFamily: "'Fredoka', sans-serif", border: "2px solid #FF9800",
+              background: slotCount === n ? "#FF9800" : "white",
+              color: slotCount === n ? "white" : "#E65100", cursor: "pointer",
+            }}>
+              {n} sílabas
+            </button>
+          ))}
+        </div>
+
+        {/* Slots */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 10 }}>
+          {slots.map((s, i) => (
+            <button key={i} onClick={() => removeSlot(i)} style={{
+              width: 85, height: 72, borderRadius: 16,
+              border: `4px dashed ${s ? "#FF9800" : "#ccc"}`,
+              background: s ? "#FFF3E0" : "rgba(255,255,255,0.5)",
+              fontSize: 28, fontWeight: 800, fontFamily: "'Fredoka', sans-serif",
+              color: "#E65100", cursor: s ? "pointer" : "default",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.2s",
+            }}>
+              {s || ""}
+            </button>
+          ))}
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 14 }}>
+          <button onClick={clearSlots} disabled={filledCount === 0 || !!feedback} style={{
+            padding: "8px 20px", borderRadius: 14, fontSize: 15, fontWeight: 600,
+            fontFamily: "'Fredoka', sans-serif", border: "2px solid #ccc",
+            background: "white", color: "#888", cursor: filledCount === 0 ? "default" : "pointer",
+            opacity: filledCount === 0 ? 0.4 : 1,
+          }}>
+            🗑️ Borrar
+          </button>
+          <button onClick={checkWord} disabled={slots.includes(null) || !!feedback} style={{
+            padding: "8px 24px", borderRadius: 14, fontSize: 15, fontWeight: 700,
+            fontFamily: "'Fredoka', sans-serif", border: "none",
+            background: slots.includes(null) ? "#ccc" : "#4CAF50",
+            color: "white", cursor: slots.includes(null) ? "default" : "pointer",
+            boxShadow: slots.includes(null) ? "none" : "0 4px 12px rgba(76,175,80,0.3)",
+          }}>
+            ✅ Comprobar
+          </button>
+        </div>
+
+        {/* Feedback */}
+        {feedback && (
+          <div style={{ fontSize: 24, marginBottom: 12, fontFamily: "'Fredoka', sans-serif", animation: "popIn 0.3s ease" }}>
+            {feedback.type === "correct" && <span>{feedback.emoji} ¡{feedback.word} es correcto!</span>}
+            {feedback.type === "wrong" && <span>❌ "{feedback.word}" no es una palabra</span>}
+            {feedback.type === "repeat" && <span>🔄 ¡Ya encontraste "{feedback.word}"!</span>}
+          </div>
+        )}
+
+        {/* Syllable cards grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginBottom: 16 }}>
+          {/* Vowel cards */}
+          {["A", "E", "I", "O", "U"].map(v => {
+            const vColors = { A: "#4CAF50", E: "#F44336", I: "#9C27B0", O: "#FFC107", U: "#2196F3" };
+            return (
+              <button key={v} onClick={() => handleCardTap(v)} disabled={!!feedback} style={{
+                padding: "12px 4px", borderRadius: 14, fontSize: 24, fontWeight: 800,
+                fontFamily: "'Fredoka', sans-serif",
+                border: `3px solid ${vColors[v]}`,
+                background: `${vColors[v]}15`, color: vColors[v],
+                cursor: feedback ? "default" : "pointer",
+                boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
+                transition: "all 0.15s",
+              }}>
+                {v}
+              </button>
+            );
+          })}
+          {/* Consonant syllable cards */}
+          {["M", "P", "L", "S"].map(letter => (
+            ["A", "E", "I", "O", "U"].map(vowel => {
+              const syl = letter + vowel;
+              const colors = { M: "#FF6B6B", P: "#4ECDC4", L: "#FFD93D", S: "#6C5CE7" };
+              return (
+                <button key={syl} onClick={() => handleCardTap(syl)} disabled={!!feedback} style={{
+                  padding: "12px 4px", borderRadius: 14, fontSize: 22, fontWeight: 700,
+                  fontFamily: "'Fredoka', sans-serif",
+                  border: `3px solid ${colors[letter]}`,
+                  background: "white", color: colors[letter],
+                  cursor: feedback ? "default" : "pointer",
+                  boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
+                  transition: "all 0.15s",
+                }}>
+                  {syl}
+                </button>
+              );
+            })
+          ))}
+        </div>
+
+        {/* Found words */}
+        {found.length > 0 && (
+          <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: 20, padding: "12px 16px", textAlign: "left" }}>
+            <div style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 14, color: "#888", marginBottom: 8 }}>
+              Palabras encontradas ({found.length}):
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {found.map((w, i) => (
+                <span key={i} style={{
+                  background: "#FFF3E0", border: "2px solid #FFB74D", borderRadius: 12,
+                  padding: "4px 12px", fontSize: 16, fontWeight: 600,
+                  fontFamily: "'Fredoka', sans-serif", color: "#E65100",
+                }}>
+                  {VALID_WORDS[w]} {w}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {found.length >= 15 && (
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <div style={{ fontSize: 28, fontFamily: "'Fredoka', sans-serif" }}>🏆 ¡Increíble!</div>
+            <button onClick={reset} style={{ ...styles.primaryBtn, background: "#FF9800", marginTop: 12 }}>Jugar de nuevo 🔄</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ===== ACTIVITY: IMAGE WORD MATCH ===== */
+function ImageWordMatch({ onBack }) {
+  const [items, setItems] = useState(() => shuffle(IMAGE_WORDS).slice(0, 10));
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const current = items[currentIdx];
+
+  const handleSelect = (opt) => {
+    if (selected) return;
+    setSelected(opt);
+    if (opt === current.word) {
+      setScore(prev => prev + 1);
+      if (currentIdx === items.length - 1) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 2500); }
+    }
+    setTimeout(() => {
+      if (currentIdx < items.length - 1) { setCurrentIdx(prev => prev + 1); setSelected(null); }
+    }, 1200);
+  };
+
+  const reset = () => { setItems(shuffle(IMAGE_WORDS).slice(0, 10)); setCurrentIdx(0); setScore(0); setSelected(null); };
+  const done = currentIdx === items.length - 1 && selected;
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)", padding: "16px 12px" }}>
+      <ConfettiEffect show={showConfetti} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
+        <ScoreBar score={score} total={items.length} />
+      </div>
+      <div style={{ maxWidth: 500, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ marginBottom: 12 }}>
+          <span style={{ background: "#1976D2", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 16, fontWeight: 700, fontFamily: "'Fredoka', sans-serif" }}>
+            ¿Cuál es la palabra? ({currentIdx + 1}/{items.length})
+          </span>
+        </div>
+        <div style={{ fontSize: 100, marginBottom: 8 }}>{current.emoji}</div>
+        {selected && (
+          <div style={{ fontSize: 28, marginBottom: 12, fontFamily: "'Fredoka', sans-serif", animation: "popIn 0.3s ease" }}>
+            {selected === current.word ? "✅ ¡Correcto!" : `❌ Era: ${current.word}`}
+          </div>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
+          {current.options.map((opt, i) => (
+            <button key={i} onClick={() => handleSelect(opt)} disabled={selected !== null} style={{
+              padding: "16px 24px", borderRadius: 16, fontSize: 30, fontWeight: 700,
+              fontFamily: "'Fredoka', sans-serif", letterSpacing: 4,
+              border: `3px solid ${selected ? (opt === current.word ? "#4CAF50" : "#ddd") : "#1976D2"}`,
+              background: selected ? (opt === current.word ? "#C8E6C9" : "white") : "white",
+              color: "#333", cursor: selected ? "default" : "pointer",
+              transition: "all 0.2s",
+            }}>
+              {opt}
+            </button>
+          ))}
+        </div>
+        {done && (
+          <button onClick={reset} style={{ ...styles.primaryBtn, background: "#1976D2", marginTop: 24 }}>
+            Jugar de nuevo 🔄
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ===== MAIN MENU ===== */
+function MainMenu({ onSelect }) {
+  const activities = [
+    { id: "vowels", emoji: "🔤", title: "Encuentra las vocales", desc: "A E I O U", color: "#FF6B6B", bg: "#FFE8E8" },
+    { id: "syl-M", emoji: "Ⓜ️", title: "Sílabas con M", desc: "ma me mi mo mu", color: "#FF6B6B", bg: "#FFE8E8" },
+    { id: "syl-P", emoji: "🅿️", title: "Sílabas con P", desc: "pa pe pi po pu", color: "#4ECDC4", bg: "#E0F7FA" },
+    { id: "syl-L", emoji: "📝", title: "Sílabas con L", desc: "la le li lo lu", color: "#FFD93D", bg: "#FFFDE7" },
+    { id: "syl-S", emoji: "⭐", title: "Sílabas con S", desc: "sa se si so su", color: "#6C5CE7", bg: "#EDE7F6" },
+    { id: "reading", emoji: "📖", title: "Comprensión lectora", desc: "Lee y responde", color: "#4CAF50", bg: "#E8F5E9" },
+    { id: "words", emoji: "🧩", title: "Forma palabras", desc: "Usa las tarjetas", color: "#FF9800", bg: "#FFF3E0" },
+    { id: "imgword", emoji: "🖼️", title: "Nombre de la imagen", desc: "¿Qué palabra es?", color: "#1976D2", bg: "#E3F2FD" },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #667eea 0%, #764ba2 100%)", padding: "20px 12px" }}>
+      <div style={{ textAlign: "center", marginBottom: 20, paddingTop: 12 }}>
+        <div style={{ fontSize: 48, marginBottom: 4 }}>📚</div>
+        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 30, color: "white", margin: 0, textShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+          ¡Aprende a Leer!
+        </h1>
+        <p style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 16, color: "rgba(255,255,255,0.85)", margin: "4px 0 0" }}>
+          Primer grado — Elige una actividad
+        </p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, maxWidth: 480, margin: "0 auto" }}>
+        {activities.map(a => (
+          <button key={a.id} onClick={() => onSelect(a.id)} style={{
+            background: "white", borderRadius: 20, padding: "16px 12px", border: "none",
+            cursor: "pointer", textAlign: "center", boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
+            transition: "transform 0.2s", display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+          }}
+          onPointerDown={e => e.currentTarget.style.transform = "scale(0.95)"}
+          onPointerUp={e => e.currentTarget.style.transform = "scale(1)"}
+          onPointerLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+            <span style={{ fontSize: 40 }}>{a.emoji}</span>
+            <span style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 17, fontWeight: 700, color: a.color }}>{a.title}</span>
+            <span style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 13, color: "#999", background: a.bg, padding: "2px 10px", borderRadius: 10 }}>{a.desc}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ===== APP ROOT ===== */
+function App() {
+  const [screen, setScreen] = useState("menu");
+
+  return (
+    <div style={{ fontFamily: "'Fredoka', sans-serif", touchAction: "manipulation", userSelect: "none", WebkitUserSelect: "none" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { overscroll-behavior: none; }
+        @keyframes popStar { 0% { transform: scale(0); opacity: 1; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        button { font-family: 'Fredoka', sans-serif; }
+      `}</style>
+      {screen === "menu" && <MainMenu onSelect={setScreen} />}
+      {screen === "vowels" && <VowelFinder onBack={() => setScreen("menu")} />}
+      {screen === "syl-M" && <SyllableComplete letter="M" onBack={() => setScreen("menu")} />}
+      {screen === "syl-P" && <SyllableComplete letter="P" onBack={() => setScreen("menu")} />}
+      {screen === "syl-L" && <SyllableComplete letter="L" onBack={() => setScreen("menu")} />}
+      {screen === "syl-S" && <SyllableComplete letter="S" onBack={() => setScreen("menu")} />}
+      {screen === "reading" && <ReadingComp onBack={() => setScreen("menu")} />}
+      {screen === "words" && <WordBuilder onBack={() => setScreen("menu")} />}
+      {screen === "imgword" && <ImageWordMatch onBack={() => setScreen("menu")} />}
+    </div>
+  );
+}
+
+const styles = {
+  backBtn: {
+    background: "rgba(255,255,255,0.85)", border: "none", borderRadius: 16,
+    padding: "8px 16px", fontSize: 16, fontWeight: 600, cursor: "pointer",
+    color: "#555", boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  },
+  primaryBtn: {
+    border: "none", borderRadius: 20, padding: "14px 32px", fontSize: 18,
+    fontWeight: 700, color: "white", cursor: "pointer",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+  },
+};
+
+// Mount the app
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+
+// Hide splash
+setTimeout(() => {
+  const splash = document.getElementById('splash');
+  if (splash) { splash.classList.add('hide'); setTimeout(() => splash.remove(), 500); }
+}, 300);
+  </script>
+
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.warn('SW registration failed:', err));
+      });
+    }
+
+    // PWA install prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Show install button after a delay
+      setTimeout(() => {
+        if (deferredPrompt) {
+          const btn = document.createElement('button');
+          btn.textContent = '📲 Instalar App';
+          btn.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:14px 28px;border:none;border-radius:20px;background:#667eea;color:white;font-size:18px;font-weight:700;font-family:Fredoka,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,0.3);cursor:pointer;';
+          btn.onclick = async () => {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            btn.remove();
+          };
+          document.body.appendChild(btn);
+          // Auto-hide after 10s
+          setTimeout(() => btn.remove(), 10000);
+        }
+      }, 3000);
+    });
+  </script>
+</body>
+</html>
