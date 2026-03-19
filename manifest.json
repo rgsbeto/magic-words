@@ -1,6 +1,6 @@
 {
-  "name": "¡Aprende a Leer! - Primer Grado",
-  "short_name": "Aprende a Leer",
+  "name": "Magic Words - Primer Grado",
+  "short_name": "Magic Words",
   "description": "Aplicación educativa interactiva para aprender a leer. Vocales, sílabas con M, P, L, S y comprensión lectora.",
   "start_url": "./index.html",
   "display": "standalone",

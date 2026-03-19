@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aprende-a-leer-v1';
+const CACHE_NAME = 'magic-words-v3';
 const ASSETS = [
   './',
   './index.html',
