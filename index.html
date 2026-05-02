@@ -1,1077 +1,407 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#667eea">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Magic Words">
-  <meta name="description" content="Aplicación educativa interactiva para aprender a leer. Primer grado.">
-  <title>Magic Words</title>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
-  <link rel="apple-touch-icon" href="./icons/icon-512x512.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body, #root { width: 100%; height: 100%; overflow-x: hidden; }
-    body { font-family: 'Fredoka', sans-serif; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
-    @keyframes popStar { 0% { transform: scale(0); opacity: 1; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
-    @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
-    button { font-family: 'Fredoka', sans-serif; }
-    #splash { position: fixed; inset: 0; background: linear-gradient(180deg, #667eea, #764ba2); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; transition: opacity 0.5s; }
-    #splash.hide { opacity: 0; pointer-events: none; }
-    #splash h1 { color: white; font-size: 28px; font-family: 'Fredoka', sans-serif; margin-top: 16px; }
-    #splash p { color: rgba(255,255,255,0.7); font-size: 14px; font-family: 'Fredoka', sans-serif; margin-top: 8px; }
-    .splash-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 24px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
-</head>
-<body>
-  <div id="splash">
-    <div style="font-size: 64px;">✨</div>
-    <h1>Magic Words</h1>
-    <p>Cargando...</p>
-    <div class="splash-spinner"></div>
-  </div>
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" data-type="module">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#667eea"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Magic Words">
+<title>Magic Words</title><link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="./icons/icon-512x512.png">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}html,body,#root{width:100%;height:100%;overflow-x:hidden}body{font-family:'Fredoka',sans-serif;overscroll-behavior:none;-webkit-user-select:none;user-select:none}@keyframes popStar{0%{transform:scale(0);opacity:1}50%{transform:scale(1.5);opacity:1}100%{transform:scale(2);opacity:0}}@keyframes popIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}button{font-family:'Fredoka',sans-serif}#splash{position:fixed;inset:0;background:linear-gradient(180deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;transition:opacity 0.5s}#splash.hide{opacity:0;pointer-events:none}#splash h1{color:white;font-size:28px;margin-top:16px}#splash p{color:rgba(255,255,255,0.7);font-size:14px;margin-top:8px}.ss{width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;margin-top:24px}@keyframes spin{to{transform:rotate(360deg)}}</style>
+</head><body>
+<div id="splash"><div style="font-size:64px">✨</div><h1>Magic Words</h1><p>Cargando...</p><div class="ss"></div></div>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-type="module">
 const { useState, useEffect, useCallback, useRef } = React;
 
 const VOWEL_COLORS = { a: "#4CAF50", e: "#F44336", i: "#9C27B0", o: "#FFC107", u: "#2196F3" };
-const CONSONANT_COLORS = { M: "#FF6B6B", P: "#4ECDC4", L: "#FFD93D", S: "#6C5CE7" };
+const CONSONANT_COLORS = { M: "#FF6B6B", P: "#4ECDC4", L: "#FFD93D", S: "#6C5CE7", T: "#E91E63", N: "#00BCD4", D: "#FF9800", F: "#8BC34A" };
 
 const SYLLABLE_WORDS = {
   M: [
-    // MA
     { word: "MANO", emoji: "✋", parts: ["MA", "NO"], blank: 0 },
     { word: "MAPA", emoji: "🗺️", parts: ["MA", "PA"], blank: 0 },
     { word: "MARIPOSA", emoji: "🦋", parts: ["MA", "RI", "PO", "SA"], blank: 0 },
     { word: "MALETA", emoji: "🧳", parts: ["MA", "LE", "TA"], blank: 0 },
     { word: "CAMA", emoji: "🛏️", parts: ["CA", "MA"], blank: 1 },
-    // ME
     { word: "MELÓN", emoji: "🍈", parts: ["ME", "LÓN"], blank: 0 },
     { word: "MEDUSA", emoji: "🪼", parts: ["ME", "DU", "SA"], blank: 0 },
     { word: "CAMELLO", emoji: "🐫", parts: ["CA", "ME", "LLO"], blank: 1 },
-    // MI
     { word: "MIEL", emoji: "🍯", parts: ["MI", "EL"], blank: 0 },
     { word: "MICRÓFONO", emoji: "🎤", parts: ["MI", "CRÓ", "FO", "NO"], blank: 0 },
     { word: "CAMISA", emoji: "👕", parts: ["CA", "MI", "SA"], blank: 1 },
     { word: "HORMIGA", emoji: "🐜", parts: ["HOR", "MI", "GA"], blank: 1 },
-    // MO
     { word: "MONO", emoji: "🐒", parts: ["MO", "NO"], blank: 0 },
     { word: "MOTO", emoji: "🏍️", parts: ["MO", "TO"], blank: 0 },
     { word: "MOSCA", emoji: "🪰", parts: ["MO", "SCA"], blank: 0 },
     { word: "MOCHILA", emoji: "🎒", parts: ["MO", "CHI", "LA"], blank: 0 },
-    // MU
     { word: "MULA", emoji: "🫏", parts: ["MU", "LA"], blank: 0 },
     { word: "MUÑECA", emoji: "🪆", parts: ["MU", "ÑE", "CA"], blank: 0 },
     { word: "MUNDO", emoji: "🌍", parts: ["MU", "NDO"], blank: 0 },
     { word: "MÚSICA", emoji: "🎵", parts: ["MÚ", "SI", "CA"], blank: 0 },
   ],
   P: [
-    // PA
     { word: "PATO", emoji: "🦆", parts: ["PA", "TO"], blank: 0 },
     { word: "PALOMA", emoji: "🕊️", parts: ["PA", "LO", "MA"], blank: 0 },
     { word: "PAPA", emoji: "🥔", parts: ["PA", "PA"], blank: 0 },
     { word: "PANTALÓN", emoji: "👖", parts: ["PA", "NTA", "LÓN"], blank: 0 },
     { word: "SOPA", emoji: "🍜", parts: ["SO", "PA"], blank: 1 },
     { word: "MAPA", emoji: "🗺️", parts: ["MA", "PA"], blank: 1 },
-    // PE
     { word: "PESO", emoji: "🏋️", parts: ["PE", "SO"], blank: 0 },
     { word: "PERA", emoji: "🍐", parts: ["PE", "RA"], blank: 0 },
     { word: "PERRO", emoji: "🐕", parts: ["PE", "RRO"], blank: 0 },
     { word: "PELOTA", emoji: "⚽", parts: ["PE", "LO", "TA"], blank: 0 },
-    // PI
     { word: "PICO", emoji: "⛏️", parts: ["PI", "CO"], blank: 0 },
     { word: "PIÑA", emoji: "🍍", parts: ["PI", "ÑA"], blank: 0 },
     { word: "PIZZA", emoji: "🍕", parts: ["PI", "ZZA"], blank: 0 },
     { word: "PINTURA", emoji: "🎨", parts: ["PI", "NTU", "RA"], blank: 0 },
-    // PO
     { word: "POLO", emoji: "🏇", parts: ["PO", "LO"], blank: 0 },
     { word: "POLLO", emoji: "🍗", parts: ["PO", "LLO"], blank: 0 },
-    // PU
     { word: "PUMA", emoji: "🐆", parts: ["PU", "MA"], blank: 0 },
     { word: "PUERTA", emoji: "🚪", parts: ["PU", "ER", "TA"], blank: 0 },
     { word: "PULPO", emoji: "🐙", parts: ["PU", "LPO"], blank: 0 },
   ],
   L: [
-    // LA
     { word: "LÁPIZ", emoji: "✏️", parts: ["LÁ", "PIZ"], blank: 0 },
     { word: "LATA", emoji: "🥫", parts: ["LA", "TA"], blank: 0 },
     { word: "LAGO", emoji: "🏞️", parts: ["LA", "GO"], blank: 0 },
     { word: "LÁMPARA", emoji: "💡", parts: ["LÁ", "MPA", "RA"], blank: 0 },
     { word: "SALA", emoji: "🛋️", parts: ["SA", "LA"], blank: 1 },
-    // LE
     { word: "LEÓN", emoji: "🦁", parts: ["LE", "ÓN"], blank: 0 },
     { word: "LECHE", emoji: "🥛", parts: ["LE", "CHE"], blank: 0 },
     { word: "LENGUA", emoji: "👅", parts: ["LE", "NGUA"], blank: 0 },
     { word: "MALETA", emoji: "🧳", parts: ["MA", "LE", "TA"], blank: 1 },
-    // LI
     { word: "LIBRO", emoji: "📖", parts: ["LI", "BRO"], blank: 0 },
     { word: "LIMÓN", emoji: "🍋", parts: ["LI", "MÓN"], blank: 0 },
-    // LO
     { word: "LORO", emoji: "🦜", parts: ["LO", "RO"], blank: 0 },
     { word: "LOBO", emoji: "🐺", parts: ["LO", "BO"], blank: 0 },
     { word: "PALO", emoji: "🪵", parts: ["PA", "LO"], blank: 1 },
     { word: "PELO", emoji: "💇", parts: ["PE", "LO"], blank: 1 },
-    // LU
     { word: "LUNA", emoji: "🌙", parts: ["LU", "NA"], blank: 0 },
     { word: "LUPA", emoji: "🔍", parts: ["LU", "PA"], blank: 0 },
     { word: "LUZ", emoji: "💡", parts: ["LU", "Z"], blank: 0 },
     { word: "LUCHA", emoji: "🤼", parts: ["LU", "CHA"], blank: 0 },
   ],
   S: [
-    // SA
     { word: "SAPO", emoji: "🐸", parts: ["SA", "PO"], blank: 0 },
     { word: "SANDÍA", emoji: "🍉", parts: ["SA", "NDÍ", "A"], blank: 0 },
     { word: "SALA", emoji: "🛋️", parts: ["SA", "LA"], blank: 0 },
     { word: "SACO", emoji: "🎒", parts: ["SA", "CO"], blank: 0 },
     { word: "VASO", emoji: "🥛", parts: ["VA", "SO"], blank: 1 },
-    // SE
     { word: "SEMILLA", emoji: "🌱", parts: ["SE", "MI", "LLA"], blank: 0 },
     { word: "SERPIENTE", emoji: "🐍", parts: ["SE", "RPIE", "NTE"], blank: 0 },
     { word: "SELLO", emoji: "📮", parts: ["SE", "LLO"], blank: 0 },
-    // SI
     { word: "SILLA", emoji: "🪑", parts: ["SI", "LLA"], blank: 0 },
     { word: "SIRENA", emoji: "🧜", parts: ["SI", "RE", "NA"], blank: 0 },
     { word: "CAMISA", emoji: "👕", parts: ["CA", "MI", "SA"], blank: 2 },
-    // SO
     { word: "SOPA", emoji: "🍜", parts: ["SO", "PA"], blank: 0 },
     { word: "SOL", emoji: "☀️", parts: ["SO", "L"], blank: 0 },
     { word: "SOMBRERO", emoji: "🤠", parts: ["SO", "MBRE", "RO"], blank: 0 },
     { word: "SONRISA", emoji: "😊", parts: ["SO", "NRI", "SA"], blank: 0 },
     { word: "OSO", emoji: "🐻", parts: ["O", "SO"], blank: 1 },
-    // SU
     { word: "SUMA", emoji: "➕", parts: ["SU", "MA"], blank: 0 },
     { word: "SUÉTER", emoji: "🧥", parts: ["SU", "É", "TER"], blank: 0 },
     { word: "SUBMARINO", emoji: "🛥️", parts: ["SU", "BMA", "RI", "NO"], blank: 0 },
-    { word: "SUPERMERCADO", emoji: "🏪", parts: ["SU", "PER", "MER", "CA", "DO"], blank: 0 },
+  ],
+  T: [
+    { word: "TACO", emoji: "🌮", parts: ["TA", "CO"], blank: 0 },
+    { word: "TAMBOR", emoji: "🥁", parts: ["TA", "MBOR"], blank: 0 },
+    { word: "TORTUGA", emoji: "🐢", parts: ["TO", "RTU", "GA"], blank: 0 },
+    { word: "TOMATE", emoji: "🍅", parts: ["TO", "MA", "TE"], blank: 0 },
+    { word: "TELÉFONO", emoji: "📞", parts: ["TE", "LÉ", "FO", "NO"], blank: 0 },
+    { word: "TELARAÑA", emoji: "🕸️", parts: ["TE", "LA", "RA", "ÑA"], blank: 0 },
+    { word: "TIJERAS", emoji: "✂️", parts: ["TI", "JE", "RAS"], blank: 0 },
+    { word: "TIBURÓN", emoji: "🦈", parts: ["TI", "BU", "RÓN"], blank: 0 },
+    { word: "TIGRE", emoji: "🐯", parts: ["TI", "GRE"], blank: 0 },
+    { word: "TUCÁN", emoji: "🦜", parts: ["TU", "CÁN"], blank: 0 },
+    { word: "TULIPÁN", emoji: "🌷", parts: ["TU", "LI", "PÁN"], blank: 0 },
+    { word: "GATO", emoji: "🐱", parts: ["GA", "TO"], blank: 1 },
+    { word: "PATO", emoji: "🦆", parts: ["PA", "TO"], blank: 1 },
+    { word: "PELOTA", emoji: "⚽", parts: ["PE", "LO", "TA"], blank: 2 },
+  ],
+  N: [
+    { word: "NARANJA", emoji: "🍊", parts: ["NA", "RA", "NJA"], blank: 0 },
+    { word: "NARIZ", emoji: "👃", parts: ["NA", "RIZ"], blank: 0 },
+    { word: "NUBE", emoji: "☁️", parts: ["NU", "BE"], blank: 0 },
+    { word: "NUDO", emoji: "🪢", parts: ["NU", "DO"], blank: 0 },
+    { word: "NUEZ", emoji: "🥜", parts: ["NU", "EZ"], blank: 0 },
+    { word: "NENE", emoji: "👶", parts: ["NE", "NE"], blank: 0 },
+    { word: "NIEVE", emoji: "❄️", parts: ["NI", "E", "VE"], blank: 0 },
+    { word: "NIÑO", emoji: "👦", parts: ["NI", "ÑO"], blank: 0 },
+    { word: "NIDO", emoji: "🪹", parts: ["NI", "DO"], blank: 0 },
+    { word: "NOPAL", emoji: "🌵", parts: ["NO", "PAL"], blank: 0 },
+    { word: "NOCHE", emoji: "🌙", parts: ["NO", "CHE"], blank: 0 },
+    { word: "MANO", emoji: "✋", parts: ["MA", "NO"], blank: 1 },
+    { word: "MONO", emoji: "🐒", parts: ["MO", "NO"], blank: 1 },
+  ],
+  D: [
+    { word: "DADO", emoji: "🎲", parts: ["DA", "DO"], blank: 0 },
+    { word: "DELFÍN", emoji: "🐬", parts: ["DE", "LFÍN"], blank: 0 },
+    { word: "DIENTE", emoji: "🦷", parts: ["DI", "EN", "TE"], blank: 0 },
+    { word: "DINERO", emoji: "💰", parts: ["DI", "NE", "RO"], blank: 0 },
+    { word: "DONA", emoji: "🍩", parts: ["DO", "NA"], blank: 0 },
+    { word: "DOMINÓ", emoji: "🁡", parts: ["DO", "MI", "NÓ"], blank: 0 },
+    { word: "DULCE", emoji: "🍬", parts: ["DU", "LCE"], blank: 0 },
+    { word: "DUCHA", emoji: "🚿", parts: ["DU", "CHA"], blank: 0 },
+    { word: "DUENDE", emoji: "🧝", parts: ["DU", "EN", "DE"], blank: 0 },
+    { word: "DEDO", emoji: "👆", parts: ["DE", "DO"], blank: 0 },
+    { word: "NUDO", emoji: "🪢", parts: ["NU", "DO"], blank: 1 },
+    { word: "DURAZNO", emoji: "🍑", parts: ["DU", "RAZ", "NO"], blank: 0 },
+  ],
+  F: [
+    { word: "FARO", emoji: "🗼", parts: ["FA", "RO"], blank: 0 },
+    { word: "FAMILIA", emoji: "👨‍👩‍👧", parts: ["FA", "MI", "LIA"], blank: 0 },
+    { word: "FANTASMA", emoji: "👻", parts: ["FA", "NTA", "SMA"], blank: 0 },
+    { word: "FELIZ", emoji: "😊", parts: ["FE", "LIZ"], blank: 0 },
+    { word: "FERIA", emoji: "🎡", parts: ["FE", "RIA"], blank: 0 },
+    { word: "FIESTA", emoji: "🎉", parts: ["FI", "ES", "TA"], blank: 0 },
+    { word: "FIDEO", emoji: "🍝", parts: ["FI", "DE", "O"], blank: 0 },
+    { word: "FOCO", emoji: "💡", parts: ["FO", "CO"], blank: 0 },
+    { word: "FOCA", emoji: "🦭", parts: ["FO", "CA"], blank: 0 },
+    { word: "FUENTE", emoji: "⛲", parts: ["FU", "EN", "TE"], blank: 0 },
+    { word: "FUEGO", emoji: "🔥", parts: ["FU", "E", "GO"], blank: 0 },
+    { word: "ELEFANTE", emoji: "🐘", parts: ["E", "LE", "FA", "NTE"], blank: 2 },
   ],
 };
 
 const READING_STORIES = [
-  {
-    title: "Mi pato Goyo",
-    emoji: "🦆",
-    text: "Este es mi pato.\nMi pato se llama Goyo.\nGoyo es muy ruidoso.\nÉl es de color blanco.\nA Goyo le gusta nadar en el lago.",
-    questions: [
-      { q: "¿Quién es Goyo?", options: ["Un perico", "Un tucán", "Un pato"], answer: 2 },
-      { q: "¿De qué color es Goyo?", options: ["Blanco", "Amarillo", "Verde"], answer: 0 },
-      { q: "¿Cómo es Goyo?", options: ["Travieso", "Ruidoso", "Tramposo"], answer: 1 },
-      { q: "¿Qué le gusta a Goyo?", options: ["Nadar en el lago", "Dormir en el lago", "Mirar el lago"], answer: 0 },
-    ],
-  },
-  {
-    title: "Mi oso Lolo",
-    emoji: "🧸",
-    text: "Este es mi oso.\nMi oso se llama Lolo.\nLolo es muy amoroso.\nÉl es de color café.\nA Lolo le gusta comer frutas.",
-    questions: [
-      { q: "¿Quién es Lolo?", options: ["Un gorila", "Un oso", "Un ratón"], answer: 1 },
-      { q: "¿De qué color es Lolo?", options: ["Negro", "Rosa", "Café"], answer: 2 },
-      { q: "¿Cómo es Lolo?", options: ["Amoroso", "Tímido", "Enojón"], answer: 0 },
-      { q: "¿Qué le gusta a Lolo?", options: ["Comer frutas", "Comer verduras", "Comer miel"], answer: 0 },
-    ],
-  },
-  {
-    title: "El Pajarito y la Cometa Azul",
-    emoji: "🐦",
-    text: "Sofía tenía una cometa azul.\nUn día, el viento sopló fuerte y la cometa se soltó, quedando atrapada en un árbol.\nUn pajarito amable vio a la cometa triste y la ayudó a volver con Sofía.\nSofía abrazó su cometa feliz y le dio las gracias al pajarito.",
-    questions: [
-      { q: "¿De qué color era la cometa?", options: ["Rojo", "Verde", "Azul"], answer: 2 },
-      { q: "¿Dónde quedó atrapada?", options: ["En un árbol", "En una nube", "En un lago"], answer: 0 },
-      { q: "¿Quién ayudó a la cometa?", options: ["Una ardilla", "Un pajarito", "Un lobo"], answer: 1 },
-    ],
-  },
-  {
-    title: "La Liebre y la Tortuga",
-    emoji: "🐢",
-    text: "La liebre corría muy rápido y se burlaba de la tortuga por ser lenta.\nDecidieron hacer una carrera.\nLa liebre, segura de ganar, se durmió bajo un árbol.\nLa tortuga, sin parar, llegó primero a la meta.\nLa liebre aprendió a no ser presumida.",
-    questions: [
-      { q: "¿Quién era más rápida?", options: ["La liebre", "La tortuga", "La hormiga"], answer: 0 },
-      { q: "¿Qué hizo la liebre durante la carrera?", options: ["Corrió rápido", "Se puso a dormir", "Caminó lento"], answer: 1 },
-      { q: "¿Quién ganó la carrera?", options: ["La tortuga", "La liebre", "El elefante"], answer: 0 },
-    ],
-  },
+  { title:"Mi pato Goyo", emoji:"🦆", text:"Este es mi pato.\nMi pato se llama Goyo.\nGoyo es muy ruidoso.\nÉl es de color blanco.\nA Goyo le gusta nadar en el lago.", questions:[{q:"¿Quién es Goyo?",options:["Un perico","Un tucán","Un pato"],answer:2},{q:"¿De qué color es Goyo?",options:["Blanco","Amarillo","Verde"],answer:0},{q:"¿Cómo es Goyo?",options:["Travieso","Ruidoso","Tramposo"],answer:1},{q:"¿Qué le gusta a Goyo?",options:["Nadar en el lago","Dormir en el lago","Mirar el lago"],answer:0}] },
+  { title:"Mi oso Lolo", emoji:"🧸", text:"Este es mi oso.\nMi oso se llama Lolo.\nLolo es muy amoroso.\nÉl es de color café.\nA Lolo le gusta comer frutas.", questions:[{q:"¿Quién es Lolo?",options:["Un gorila","Un oso","Un ratón"],answer:1},{q:"¿De qué color es Lolo?",options:["Negro","Rosa","Café"],answer:2},{q:"¿Cómo es Lolo?",options:["Amoroso","Tímido","Enojón"],answer:0},{q:"¿Qué le gusta a Lolo?",options:["Comer frutas","Comer verduras","Comer miel"],answer:0}] },
+  { title:"El Pajarito y la Cometa Azul", emoji:"🐦", text:"Sofía tenía una cometa azul.\nUn día, el viento sopló fuerte y la cometa se soltó, quedando atrapada en un árbol.\nUn pajarito amable vio a la cometa triste y la ayudó a volver con Sofía.\nSofía abrazó su cometa feliz y le dio las gracias al pajarito.", questions:[{q:"¿De qué color era la cometa?",options:["Rojo","Verde","Azul"],answer:2},{q:"¿Dónde quedó atrapada?",options:["En un árbol","En una nube","En un lago"],answer:0},{q:"¿Quién ayudó a la cometa?",options:["Una ardilla","Un pajarito","Un lobo"],answer:1}] },
+  { title:"La Liebre y la Tortuga", emoji:"🐢", text:"La liebre corría muy rápido y se burlaba de la tortuga por ser lenta.\nDecidieron hacer una carrera.\nLa liebre, segura de ganar, se durmió bajo un árbol.\nLa tortuga, sin parar, llegó primero a la meta.\nLa liebre aprendió a no ser presumida.", questions:[{q:"¿Quién era más rápida?",options:["La liebre","La tortuga","La hormiga"],answer:0},{q:"¿Qué hizo la liebre durante la carrera?",options:["Corrió rápido","Se puso a dormir","Caminó lento"],answer:1},{q:"¿Quién ganó la carrera?",options:["La tortuga","La liebre","El elefante"],answer:0}] },
+  { title:"Una flor para mamá", emoji:"🌻", text:"Le daré una flor a mi mamá.\nLa flor es grande y amarilla.\nA mi mamá le gustará.\nLa elegí del jardín y la voy a poner en una maceta.", questions:[{q:"¿Qué le daré a mi mamá?",options:["Un regalo","Una flor","Un pastel"],answer:1},{q:"¿Cómo es la flor?",options:["Pequeña y roja","Grande y amarilla","Azul y bonita"],answer:1},{q:"¿Dónde la pondré?",options:["En un vaso","En una maceta","En el piso"],answer:1}] },
+  { title:"León", emoji:"🦁", text:"Los leones son mis animales favoritos.\nMe gustan los leones porque son grandes.\nTengo un león de juguete.\nTengo un disfraz de león.", questions:[{q:"¿Cuáles son mis animales favoritos?",options:["Los perros","Los gatos","Los leones"],answer:2},{q:"¿Por qué me gustan los leones?",options:["Son grandes","Son pequeños","Son rápidos"],answer:0},{q:"¿Qué es lo que tengo?",options:["Un león real","Un disfraz de león","Un gato"],answer:1}] },
 ];
 
 const VALID_WORDS = {
-  // 2 sílabas - palabras reales formables con las tarjetas M,P,L,S + vocales
-  "MAMA": "👩", "MESA": "🍽️", "MISA": "⛪", "MASA": "🫓", "MAPA": "🗺️",
-  "MULA": "🫏", "MUSA": "🎭", "MOLE": "🍲", "MASO": "🔨", "MALO": "👎",
-  "MELO": "🍈", "MIMO": "🤡", "MILI": "💂",
-  "PAPA": "🥔", "PUMA": "🐆", "PALO": "🪵", "PASO": "👣",
-  "PASE": "🎫", "PESO": "🏋️", "PISO": "🏠", "POLO": "🏇", "POSE": "📸",
-  "PUSE": "✅", "PULE": "✨", "PILE": "🔋", "PIPA": "🪈",
-  "LUPA": "🔍", "LOMA": "⛰️", "LISO": "🧊", "LOMO": "🥩",
-  "LOSA": "🧱", "SUMA": "➕", "SALA": "🛋️", "SOPA": "🍜", "SOLO": "1️⃣",
-  "SAPO": "🐸", "SILO": "🏗️", "SOLA": "🧍", "SOME": "😴",
-  "SUMO": "🤼", "SUME": "➕", "SEMI": "½",
-  "LEMA": "📜", "LELO": "😵", "PELA": "🍌",
-  "POMO": "🫙", "MAMI": "👩",
-  "PAPI": "👨", "LAMA": "🦙", "SUPE": "🧠", "SUPO": "💡",
-  "PELI": "🎬", "MULO": "🫏", "LAME": "👅",
-  // Palabras con vocales solas
-  "AMO": "❤️", "AME": "💕", "ASA": "🍖", "ASO": "🍖", "ALA": "🪽",
-  "APE": "🐒", "OSO": "🐻", "OLA": "🌊", "OLE": "💃",
-  "UNO": "1️⃣", "USA": "🇺🇸", "UPA": "🙌", "UVA": "🍇",
-  "EMA": "📧", "ESO": "👆", "ESA": "👉",
-  "ISA": "👧",
-  "AMA": "❤️", "AMI": "👋",
-  "ALO": "📞", "ALI": "👧", "ALE": "🍺",
-  "ELE": "🔤", "EMU": "🪶",
-  "IMA": "🧲",
-  "OPE": "👨‍⚕️",
-  "ULE": "🌿",
-  // vocal + sílaba consonante
-  "ALMA": "✨", "ASPA": "🌀", "ISLA": "🏝️", "ALMO": "🌳",
-  "OLMO": "🌳", "ASMA": "😮‍💨", "ALPE": "🏔️",
-  // sílaba + vocal
-  "MAMI": "👩", "PAPI": "👨", "PASE": "🎫",
-  "SALI": "🚶", "SALE": "🚪", "MOLE": "🍲",
-  "PILE": "🔋", "POLO": "🏇", "PISO": "🏠",
-  "PESO": "🏋️", "MESA": "🍽️",
-  // 3 sílabas
-  "MALETA": "🧳", "PALOMA": "🕊️", "PELUSA": "🧶", "SOLAPA": "📁",
-  "PASAME": "🤲", "PILUSO": "🎩",
-  "PALETA": "🍭", "AMOLE": "🧼", "AMASE": "🫓",
-  "ALAMO": "🌳", "ASUME": "🤔", "ASOLE": "☀️",
+  "MAMA":"👩","MASA":"🫓","MAPA":"🗺️","MULA":"🫏","MALO":"👎","MIMO":"🤡",
+  "PAPA":"🥔","PUMA":"🐆","PALO":"🪵","PASO":"👣","PASE":"🎫","PESO":"🏋️","PISO":"🏠","POLO":"🏇",
+  "LUPA":"🔍","LOMA":"⛰️","LOMO":"🥩","SUMA":"➕","SALA":"🛋️","SOPA":"🍜","SOLO":"1️⃣","SAPO":"🐸",
+  "SUMO":"🤼","MAMI":"👩","PAPI":"👨","SUPE":"🧠","SUPO":"💡","MONO":"🐒","MOTO":"🏍️",
+  "TAPA":"🫙","TOMA":"🥤","TOPO":"🐭","NOTA":"📝","NUDO":"🪢","NATA":"🍦","DATO":"📊","DUNA":"🏖️",
+  "FAMA":"⭐","FILO":"🗡️","FOTO":"📷","TUNA":"🎶","TIPO":"📋","DAMA":"👸","DOTE":"💝",
+  "FINO":"✨","FASE":"📐","AMO":"❤️","ALA":"🪽","OSO":"🐻","OLA":"🌊","USA":"🇺🇸",
+  "ESO":"👆","AMA":"❤️","ALO":"📞","ALMA":"✨","ISLA":"🏝️",
+  "MALETA":"🧳","PALOMA":"🕊️","PALETA":"🍭","TOMATE":"🍅","SALUDO":"👋",
+  "DONA":"🍩","DEDO":"👆","FOSA":"🕳️","TELA":"🧵","NUDO":"🪢","NATA":"🍦",
+  "FAMA":"⭐","LUNA":"🌙","MOLE":"🍲","SOLA":"🧍","PELI":"🎬",
 };
-
-const ALL_SYLLABLE_CARDS = [
-  "MA", "ME", "MI", "MO", "MU",
-  "PA", "PE", "PI", "PO", "PU",
-  "LA", "LE", "LI", "LO", "LU",
-  "SA", "SE", "SI", "SO", "SU",
-];
 
 const IMAGE_WORDS = [
-  // LA
-  { emoji: "🥫", word: "LATA", options: ["LATA", "LOTA", "LUTA"] },
-  // LE
-  { emoji: "🦁", word: "LEÓN", options: ["LEÓN", "LIÓN", "LÓN"] },
-  { emoji: "🥛", word: "LECHE", options: ["LUCHE", "LECHE", "LICHE"] },
-  // LI
-  { emoji: "📖", word: "LIBRO", options: ["LIBRO", "LOBRO", "LABRO"] },
-  // LO
-  { emoji: "🦜", word: "LORO", options: ["LURO", "LORO", "LARO"] },
-  { emoji: "🐺", word: "LOBO", options: ["LOBO", "LUBO", "LABO"] },
-  // LU
-  { emoji: "🌙", word: "LUNA", options: ["LANA", "LUNA", "LONA"] },
-  { emoji: "🔍", word: "LUPA", options: ["LOPA", "LIPA", "LUPA"] },
-  // MA
-  { emoji: "✋", word: "MANO", options: ["MONO", "MENO", "MANO"] },
-  { emoji: "🗺️", word: "MAPA", options: ["MAPA", "MOPA", "MUPA"] },
-  { emoji: "🦋", word: "MARIPOSA", options: ["MARIPOSA", "MERIPOSA", "MURIPOSA"] },
-  // ME
-  { emoji: "🍈", word: "MELÓN", options: ["MOLÓN", "MELÓN", "MULÓN"] },
-  // MI
-  { emoji: "🎤", word: "MICRÓFONO", options: ["MUCRÓFONO", "MACRÓFONO", "MICRÓFONO"] },
-  // MO
-  { emoji: "🐒", word: "MONO", options: ["MANO", "MONO", "MENO"] },
-  { emoji: "🏍️", word: "MOTO", options: ["MATO", "MUTO", "MOTO"] },
-  // MU
-  { emoji: "🦇", word: "MURCIÉLAGO", options: ["MARCIÉLAGO", "MURCIÉLAGO", "MIRCIÉLAGO"] },
-  // PA
-  { emoji: "🥔", word: "PAPA", options: ["POPA", "PUPA", "PAPA"] },
-  { emoji: "🕊️", word: "PALOMA", options: ["PALOMA", "POLOMA", "PULOMA"] },
-  // PE
-  { emoji: "🐕", word: "PERRO", options: ["PARRO", "PERRO", "PIRRO"] },
-  { emoji: "🍐", word: "PERA", options: ["PERA", "PURA", "PARA"] },
-  // PI
-  { emoji: "🍕", word: "PIZZA", options: ["POZZA", "PUZZA", "PIZZA"] },
-  { emoji: "🍍", word: "PIÑA", options: ["PUÑA", "PIÑA", "PAÑA"] },
-  // PO
-  { emoji: "🐔", word: "POLLO", options: ["PALLO", "PULLO", "POLLO"] },
-  // PU
-  { emoji: "🚪", word: "PUERTA", options: ["PUERTA", "PIERTA", "PAERTA"] },
-  // SA
-  { emoji: "🐸", word: "SAPO", options: ["SIPO", "SUPO", "SAPO"] },
-  { emoji: "🍉", word: "SANDÍA", options: ["SUNDÍA", "SANDÍA", "SINDÍA"] },
-  // SE
-  { emoji: "🐍", word: "SERPIENTE", options: ["SIRPIENTE", "SURPIENTE", "SERPIENTE"] },
-  // SI
-  { emoji: "🪑", word: "SILLA", options: ["SOLLA", "SILLA", "SULLA"] },
-  // SO
-  { emoji: "☀️", word: "SOL", options: ["SOL", "SAL", "SUL"] },
-  { emoji: "🍜", word: "SOPA", options: ["SEPA", "SOPA", "SIPA"] },
-  // SU
-  { emoji: "🧥", word: "SUÉTER", options: ["SUÉTER", "SIÉTER", "SOÉTER"] },
-  // BONUS
-  { emoji: "🐻", word: "OSO", options: ["OSU", "ESO", "OSO"] },
+  {emoji:"🥫",word:"LATA",options:["LATA","LOTA","LUTA"]},{emoji:"🦁",word:"LEÓN",options:["LEÓN","LIÓN","LÓN"]},
+  {emoji:"📖",word:"LIBRO",options:["LIBRO","LOBRO","LABRO"]},{emoji:"🦜",word:"LORO",options:["LURO","LORO","LARO"]},
+  {emoji:"🌙",word:"LUNA",options:["LANA","LUNA","LONA"]},{emoji:"🔍",word:"LUPA",options:["LOPA","LIPA","LUPA"]},
+  {emoji:"✋",word:"MANO",options:["MONO","MENO","MANO"]},{emoji:"🗺️",word:"MAPA",options:["MAPA","MOPA","MUPA"]},
+  {emoji:"🐒",word:"MONO",options:["MANO","MONO","MENO"]},{emoji:"🏍️",word:"MOTO",options:["MATO","MUTO","MOTO"]},
+  {emoji:"🥔",word:"PAPA",options:["POPA","PUPA","PAPA"]},{emoji:"🐕",word:"PERRO",options:["PARRO","PERRO","PIRRO"]},
+  {emoji:"🍕",word:"PIZZA",options:["POZZA","PUZZA","PIZZA"]},{emoji:"🍍",word:"PIÑA",options:["PUÑA","PIÑA","PAÑA"]},
+  {emoji:"🐸",word:"SAPO",options:["SIPO","SUPO","SAPO"]},{emoji:"☀️",word:"SOL",options:["SOL","SAL","SUL"]},
+  {emoji:"🍜",word:"SOPA",options:["SEPA","SOPA","SIPA"]},{emoji:"🐻",word:"OSO",options:["OSU","ESO","OSO"]},
+  {emoji:"🌮",word:"TACO",options:["TACO","TECO","TUCO"]},{emoji:"🍅",word:"TOMATE",options:["TOMATE","TUMATO","TAMOTE"]},
+  {emoji:"🐯",word:"TIGRE",options:["TAGRE","TIGRE","TOGRE"]},{emoji:"🐢",word:"TORTUGA",options:["TARTUGA","TURTUGA","TORTUGA"]},
+  {emoji:"🥁",word:"TAMBOR",options:["TAMBOR","TIMBOR","TOMBOR"]},{emoji:"🌷",word:"TULIPÁN",options:["TALIPÁN","TULIPÁN","TILIPÁN"]},
+  {emoji:"🍊",word:"NARANJA",options:["NORANJA","NARANJA","NIRANJA"]},{emoji:"☁️",word:"NUBE",options:["NUBE","NABE","NOBE"]},
+  {emoji:"👶",word:"NENE",options:["NANO","NENE","NONO"]},{emoji:"🎲",word:"DADO",options:["DUDO","DIDO","DADO"]},
+  {emoji:"🐬",word:"DELFÍN",options:["DELFÍN","DALFÍN","DULFÍN"]},{emoji:"🍩",word:"DONA",options:["DUNA","DONA","DENA"]},
+  {emoji:"🍬",word:"DULCE",options:["DOLCE","DALCE","DULCE"]},{emoji:"👻",word:"FANTASMA",options:["FANTASMA","FINTASMA","FUNTASMA"]},
+  {emoji:"😊",word:"FELIZ",options:["FALIZ","FELIZ","FOLIZ"]},{emoji:"🎉",word:"FIESTA",options:["FUESTA","FIESTA","FASTA"]},
+  {emoji:"💡",word:"FOCO",options:["FACO","FUCO","FOCO"]},{emoji:"🐘",word:"ELEFANTE",options:["ELEFANTE","ALAFANTE","OLOFANTE"]},
 ];
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+const SEMANTIC_FIELDS = [
+  {category:"🍎 Frutas",items:["🍎 Manzana","🍌 Banano","🍉 Sandía","🍊 Naranja","🍍 Piña","🍐 Pera"],intruder:"🥕 Zanahoria"},
+  {category:"🚗 Transportes",items:["✈️ Avión","🚀 Cohete","🚚 Camión","🚗 Carro","🛴 Patineta"],intruder:"🧹 Plancha"},
+  {category:"👗 Ropa",items:["👗 Vestido","👖 Pantalón","🧥 Abrigo","👕 Camisa","👟 Zapatos"],intruder:"⛸️ Patines"},
+  {category:"🐄 Animales de granja",items:["🐷 Cerdo","🐔 Gallina","🐑 Oveja","🐴 Caballo","🐄 Vaca"],intruder:"🐙 Pulpo"},
+  {category:"🎸 Instrumentos",items:["🎹 Piano","🎺 Trompeta","🥁 Tambor","🎸 Guitarra","🪗 Arpa"],intruder:"📞 Teléfono"},
+  {category:"✏️ Útiles escolares",items:["📏 Regla","✂️ Tijeras","🖍️ Crayones","📖 Libro","✏️ Lápiz"],intruder:"🪥 Cepillo"},
+  {category:"🪑 Muebles",items:["🪑 Silla","🛏️ Cama","🍽️ Mesa","📚 Librero","🗄️ Armario"],intruder:"🌳 Árbol"},
+  {category:"🧸 Juguetes",items:["🪆 Muñeca","🪀 Yoyo","🧱 Bloques","🚗 Carrito","🧸 Peluche"],intruder:"🧮 Calculadora"},
+  {category:"🌸 Flores",items:["🌹 Rosa","🌷 Tulipán","🌻 Girasol","🌺 Flor","💐 Ramo"],intruder:"🌵 Cactus"},
+  {category:"💎 Joyas",items:["📿 Collar","💍 Anillo","👂 Aretes","📿 Pulsera"],intruder:"🧢 Gorro"},
+];
 
-function generateVowelGrid() {
-  const vowels = ["a", "e", "i", "o", "u"];
-  return Array.from({ length: 48 }, () => vowels[Math.floor(Math.random() * 5)]);
-}
-
-function StarBurst({ x, y }) {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => { const t = setTimeout(() => setVisible(false), 600); return () => clearTimeout(t); }, []);
-  if (!visible) return null;
-  return (
-    <div style={{ position: "fixed", left: x - 20, top: y - 20, pointerEvents: "none", zIndex: 9999, fontSize: 40, animation: "popStar 0.6s ease-out forwards" }}>
-      ⭐
-    </div>
-  );
-}
-
-function ConfettiEffect({ show }) {
-  if (!show) return null;
-  const pieces = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    delay: Math.random() * 0.5,
-    color: ["#FF6B6B", "#4ECDC4", "#FFD93D", "#6C5CE7", "#FF9FF3", "#54A0FF"][Math.floor(Math.random() * 6)],
-    size: 8 + Math.random() * 12,
-    rotation: Math.random() * 360,
-  }));
-  return (
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none", zIndex: 9999, overflow: "hidden" }}>
-      {pieces.map(p => (
-        <div key={p.id} style={{
-          position: "absolute", top: -20, left: `${p.left}%`, width: p.size, height: p.size,
-          backgroundColor: p.color, borderRadius: p.size > 14 ? "50%" : "2px",
-          transform: `rotate(${p.rotation}deg)`,
-          animation: `confettiFall 2s ease-in ${p.delay}s forwards`,
-        }} />
-      ))}
-    </div>
-  );
-}
-
-function ScoreBar({ score, total, label }) {
-  const pct = total > 0 ? (score / total) * 100 : 0;
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", background: "rgba(255,255,255,0.3)", borderRadius: 20, backdropFilter: "blur(8px)" }}>
-      <span style={{ fontSize: 22 }}>⭐</span>
-      <div style={{ flex: 1, height: 14, background: "rgba(0,0,0,0.1)", borderRadius: 7, overflow: "hidden", minWidth: 100 }}>
-        <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #FFD700, #FFA500)", borderRadius: 7, transition: "width 0.5s ease" }} />
-      </div>
-      <span style={{ fontWeight: 700, fontSize: 16, color: "#333" }}>{score}/{total}</span>
-    </div>
-  );
-}
-
-/* ===== ACTIVITY: VOWEL FINDER ===== */
-function VowelFinder({ onBack }) {
-  const [targetVowel, setTargetVowel] = useState("a");
-  const [grid, setGrid] = useState(() => generateVowelGrid());
-  const [tapped, setTapped] = useState(new Set());
-  const [stars, setStars] = useState([]);
-  const [score, setScore] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const total = grid.filter(v => v === targetVowel).length;
-
-  const handleTap = (idx, e) => {
-    if (tapped.has(idx)) return;
-    if (grid[idx] === targetVowel) {
-      setTapped(prev => new Set([...prev, idx]));
-      setScore(prev => prev + 1);
-      setStars(prev => [...prev, { id: Date.now(), x: e.clientX, y: e.clientY }]);
-      if (score + 1 === total) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 2500);
-      }
-    }
-  };
-
-  const nextVowel = () => {
-    const vowels = ["a", "e", "i", "o", "u"];
-    const next = vowels[(vowels.indexOf(targetVowel) + 1) % 5];
-    setTargetVowel(next);
-    setGrid(generateVowelGrid());
-    setTapped(new Set());
-    setScore(0);
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #FFECD2 0%, #FCB69F 100%)", padding: "16px 12px" }}>
-      <ConfettiEffect show={showConfetti} />
-      {stars.map(s => <StarBurst key={s.id} x={s.x} y={s.y} />)}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
-        <ScoreBar score={score} total={total} />
-      </div>
-      <div style={{ textAlign: "center", marginBottom: 12 }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 14, background: "white", padding: "10px 28px", borderRadius: 24, boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-          <span style={{ fontSize: 20, fontWeight: 600, color: "#555", fontFamily: "'Fredoka', sans-serif" }}>Toca la letra:</span>
-          <span style={{ fontSize: 52, fontWeight: 800, color: VOWEL_COLORS[targetVowel], fontFamily: "'Fredoka', sans-serif", lineHeight: 1 }}>{targetVowel}</span>
-        </div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: 6, maxWidth: 500, margin: "0 auto" }}>
-        {grid.map((letter, i) => {
-          const isTarget = letter === targetVowel;
-          const isTapped = tapped.has(i);
-          return (
-            <button key={i} onClick={(e) => handleTap(i, e)} style={{
-              width: "100%", aspectRatio: "1", borderRadius: "50%", border: "3px solid " + (isTapped ? VOWEL_COLORS[targetVowel] : "#ddd"),
-              background: isTapped ? VOWEL_COLORS[targetVowel] : "white",
-              color: isTapped ? "white" : "#555",
-              fontSize: 22, fontWeight: 700, fontFamily: "'Fredoka', sans-serif",
-              cursor: "pointer", transition: "all 0.2s", transform: isTapped ? "scale(0.9)" : "scale(1)",
-              boxShadow: isTapped ? `0 0 12px ${VOWEL_COLORS[targetVowel]}50` : "0 2px 6px rgba(0,0,0,0.08)",
-            }}>
-              {letter}
-            </button>
-          );
-        })}
-      </div>
-      {score === total && (
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          <div style={{ fontSize: 28, marginBottom: 8, fontFamily: "'Fredoka', sans-serif" }}>🎉 ¡Muy bien!</div>
-          <button onClick={nextVowel} style={{ ...styles.primaryBtn, background: VOWEL_COLORS[targetVowel] }}>
-            Siguiente vocal →
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ===== ACTIVITY: SYLLABLE COMPLETE ===== */
-function SyllableComplete({ letter, onBack }) {
-  const allWords = SYLLABLE_WORDS[letter];
-  const [words, setWords] = useState(() => shuffle(allWords).slice(0, 10));
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [score, setScore] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const syllables = [`${letter}A`, `${letter}E`, `${letter}I`, `${letter}O`, `${letter}U`];
-  const current = words[currentIdx];
-  const correctSyllable = current.parts[current.blank].replace(/[ÁÉÍÓÚ]/g, m => ({ Á: "A", É: "E", Í: "I", Ó: "O", Ú: "U" }[m]));
-
-  const handleSelect = (syl) => {
-    if (selected !== null) return;
-    setSelected(syl);
-    if (syl === correctSyllable) {
-      setScore(prev => prev + 1);
-      if (currentIdx === words.length - 1) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 2500);
-      }
-    }
-    setTimeout(() => {
-      if (currentIdx < words.length - 1) {
-        setCurrentIdx(prev => prev + 1);
-        setSelected(null);
-      }
-    }, 1200);
-  };
-
-  const reset = () => { setWords(shuffle(allWords).slice(0, 10)); setCurrentIdx(0); setScore(0); setSelected(null); };
-  const color = CONSONANT_COLORS[letter];
-
-  return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg, ${color}22 0%, ${color}44 100%)`, padding: "16px 12px" }}>
-      <ConfettiEffect show={showConfetti} />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
-        <ScoreBar score={score} total={words.length} />
-      </div>
-      <div style={{ textAlign: "center", marginBottom: 8 }}>
-        <span style={{ background: color, color: "white", padding: "6px 24px", borderRadius: 20, fontSize: 18, fontWeight: 700, fontFamily: "'Fredoka', sans-serif" }}>
-          Sílabas con {letter} ({currentIdx + 1}/{words.length})
-        </span>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20, marginTop: 16 }}>
-        <div style={{ fontSize: 80, lineHeight: 1 }}>{current.emoji}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
-          {current.parts.map((part, i) => (
-            <span key={i} style={{
-              fontSize: 42, fontWeight: 800, fontFamily: "'Fredoka', sans-serif",
-              color: i === current.blank ? color : "#333",
-              background: i === current.blank ? (selected ? (selected === correctSyllable ? "#C8E6C9" : "#FFCDD2") : `${color}20`) : "transparent",
-              padding: "4px 12px", borderRadius: 12, minWidth: 60, textAlign: "center",
-              border: i === current.blank ? `3px dashed ${color}` : "none",
-            }}>
-              {i === current.blank ? (selected || "___") : part}
-            </span>
-          ))}
-        </div>
-        {selected && (
-          <div style={{ fontSize: 36, animation: "popIn 0.3s ease" }}>
-            {selected === correctSyllable ? "✅ ¡Correcto!" : `❌ Era: ${current.parts[current.blank]}`}
-          </div>
-        )}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 8 }}>
-          {syllables.map(syl => (
-            <button key={syl} onClick={() => handleSelect(syl)} disabled={selected !== null} style={{
-              fontSize: 30, fontWeight: 700, fontFamily: "'Fredoka', sans-serif",
-              padding: "12px 24px", borderRadius: 16, border: `3px solid ${color}`,
-              background: selected === syl ? (syl === correctSyllable ? "#4CAF50" : "#F44336") : "white",
-              color: selected === syl ? "white" : color,
-              cursor: selected ? "default" : "pointer", transition: "all 0.2s",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)", minWidth: 70,
-              opacity: selected && selected !== syl ? 0.5 : 1,
-            }}>
-              {syl}
-            </button>
-          ))}
-        </div>
-      </div>
-      {currentIdx === words.length - 1 && selected && (
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <div style={{ fontSize: 28, fontFamily: "'Fredoka', sans-serif", marginBottom: 12 }}>
-            🌟 ¡Terminaste! {score}/{words.length}
-          </div>
-          <button onClick={reset} style={{ ...styles.primaryBtn, background: color }}>Jugar de nuevo 🔄</button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ===== ACTIVITY: READING COMPREHENSION ===== */
-function ReadingComp({ onBack }) {
-  const [storyIdx, setStoryIdx] = useState(0);
-  const [questionIdx, setQuestionIdx] = useState(-1);
-  const [answers, setAnswers] = useState({});
-  const [showConfetti, setShowConfetti] = useState(false);
-  const story = READING_STORIES[storyIdx];
-  const score = Object.values(answers).filter(a => a.correct).length;
-
-  const handleAnswer = (qIdx, aIdx) => {
-    if (answers[qIdx] !== undefined) return;
-    const correct = story.questions[qIdx].answer === aIdx;
-    setAnswers(prev => ({ ...prev, [qIdx]: { selected: aIdx, correct } }));
-    if (Object.keys(answers).length + 1 === story.questions.length && correct) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2500);
-    }
-  };
-
-  const nextStory = () => {
-    setStoryIdx((storyIdx + 1) % READING_STORIES.length);
-    setQuestionIdx(-1);
-    setAnswers({});
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)", padding: "16px 12px" }}>
-      <ConfettiEffect show={showConfetti} />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
-        <ScoreBar score={score} total={story.questions.length} />
-      </div>
-      {questionIdx === -1 ? (
-        <div style={{ maxWidth: 500, margin: "0 auto" }}>
-          <div style={{ background: "white", borderRadius: 24, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
-            <div style={{ textAlign: "center", marginBottom: 16 }}>
-              <span style={{ fontSize: 64 }}>{story.emoji}</span>
-              <h2 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, color: "#2E7D32", margin: "8px 0" }}>{story.title}</h2>
-            </div>
-            <div style={{ fontSize: 22, lineHeight: 1.8, fontFamily: "'Fredoka', sans-serif", color: "#333", textAlign: "center", whiteSpace: "pre-line" }}>
-              {story.text}
-            </div>
-          </div>
-          <div style={{ textAlign: "center", marginTop: 20 }}>
-            <button onClick={() => setQuestionIdx(0)} style={{ ...styles.primaryBtn, background: "#4CAF50", fontSize: 22 }}>
-              📝 Responder preguntas
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ maxWidth: 500, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 12 }}>
-            <span style={{ background: "#4CAF50", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 16, fontWeight: 700, fontFamily: "'Fredoka', sans-serif" }}>
-              Pregunta {questionIdx + 1} de {story.questions.length}
-            </span>
-          </div>
-          <div style={{ background: "white", borderRadius: 24, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}>
-            <p style={{ fontSize: 24, fontWeight: 700, fontFamily: "'Fredoka', sans-serif", color: "#333", textAlign: "center", marginBottom: 20 }}>
-              {story.questions[questionIdx].q}
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {story.questions[questionIdx].options.map((opt, i) => {
-                const ans = answers[questionIdx];
-                const answered = ans !== undefined;
-                const wasSelected = answered && ans.selected === i;
-                const gotItRight = answered && ans.correct;
-                let borderColor = "#4CAF50";
-                let bgColor = "white";
-                let prefix = "";
-                if (answered) {
-                  if (wasSelected && gotItRight) {
-                    borderColor = "#4CAF50";
-                    bgColor = "#C8E6C9";
-                    prefix = "✅ ";
-                  } else if (wasSelected && !gotItRight) {
-                    borderColor = "#F44336";
-                    bgColor = "#FFCDD2";
-                    prefix = "❌ ";
-                  } else {
-                    borderColor = "#ddd";
-                    bgColor = "white";
-                  }
-                }
-                return (
-                  <button key={i} onClick={() => handleAnswer(questionIdx, i)} disabled={answered} style={{
-                    padding: "14px 20px", borderRadius: 16, fontSize: 22, fontWeight: 600,
-                    fontFamily: "'Fredoka', sans-serif", cursor: answered ? "default" : "pointer",
-                    border: `3px solid ${borderColor}`,
-                    background: bgColor,
-                    color: "#333", transition: "all 0.2s", textAlign: "left",
-                  }}>
-                    {prefix}{opt}
-                  </button>
-                );
-              })}
-            </div>
-            {answers[questionIdx] && !answers[questionIdx].correct && (
-              <p style={{ textAlign: "center", marginTop: 14, fontSize: 16, color: "#888", fontFamily: "'Fredoka', sans-serif" }}>
-                💡 Vuelve a leer la historia e intenta de nuevo
-              </p>
-            )}
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 16 }}>
-            {questionIdx > 0 && (
-              <button onClick={() => setQuestionIdx(questionIdx - 1)} style={{ ...styles.primaryBtn, background: "#78909C" }}>← Anterior</button>
-            )}
-            {questionIdx < story.questions.length - 1 && answers[questionIdx] !== undefined && (
-              <button onClick={() => setQuestionIdx(questionIdx + 1)} style={{ ...styles.primaryBtn, background: "#4CAF50" }}>Siguiente →</button>
-            )}
-            {questionIdx === story.questions.length - 1 && answers[questionIdx] !== undefined && (
-              <button onClick={nextStory} style={{ ...styles.primaryBtn, background: "#FF9800" }}>Otra historia 📖</button>
-            )}
-          </div>
-          <div style={{ textAlign: "center", marginTop: 8 }}>
-            <button onClick={() => setQuestionIdx(-1)} style={{ fontSize: 14, color: "#666", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-              Volver a leer
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ===== ACTIVITY: WORD BUILDER (Syllable Cards) ===== */
-function WordBuilder({ onBack }) {
-  const totalWords = Object.keys(VALID_WORDS).length;
-  const [slots, setSlots] = useState([null, null]);
-  const [found, setFound] = useState([]);
-  const [feedback, setFeedback] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [slotCount, setSlotCount] = useState(2);
-  const feedbackTimer = useRef(null);
-
-  const handleCardTap = (syl) => {
-    if (feedback) return;
-    const emptySlot = slots.indexOf(null);
-    if (emptySlot === -1) return;
-    const ns = [...slots];
-    ns[emptySlot] = syl;
-    setSlots(ns);
-  };
-
-  const removeSlot = (idx) => {
-    if (feedback) return;
-    const ns = [...slots];
-    ns[idx] = null;
-    setSlots(ns);
-  };
-
-  const clearSlots = () => {
-    if (feedback) return;
-    setSlots(Array(slotCount).fill(null));
-  };
-
-  const changeSlotCount = (n) => {
-    setSlots(Array(n).fill(null));
-    setSlotCount(n);
-    setFeedback(null);
-  };
-
-  const checkWord = () => {
-    if (slots.includes(null)) return;
-    const word = slots.join("");
-    if (found.includes(word)) {
-      setFeedback({ type: "repeat", word });
-    } else if (VALID_WORDS[word]) {
-      setFeedback({ type: "correct", word, emoji: VALID_WORDS[word] });
-      setFound(prev => [...prev, word]);
-      if (found.length + 1 >= 15) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 2500);
-      }
-    } else {
-      setFeedback({ type: "wrong", word });
-    }
-    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
-    feedbackTimer.current = setTimeout(() => {
-      setSlots(Array(slotCount).fill(null));
-      setFeedback(null);
-    }, 1500);
-  };
-
-  const reset = () => {
-    setSlots(Array(2).fill(null));
-    setSlotCount(2);
-    setFound([]);
-    setFeedback(null);
-  };
-
-  const filledCount = slots.filter(Boolean).length;
-
-  return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)", padding: "16px 12px" }}>
-      <ConfettiEffect show={showConfetti} />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.3)", padding: "6px 14px", borderRadius: 20, backdropFilter: "blur(8px)" }}>
-          <span style={{ fontSize: 20 }}>🧩</span>
-          <span style={{ fontWeight: 700, fontSize: 16, color: "#333", fontFamily: "'Fredoka', sans-serif" }}>{found.length} palabras</span>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 500, margin: "0 auto", textAlign: "center" }}>
-        <div style={{ marginBottom: 10 }}>
-          <h2 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 22, color: "#E65100", margin: "0 0 4px" }}>
-            🧩 ¡Forma palabras!
-          </h2>
-          <p style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 14, color: "#888" }}>
-            Combina las tarjetas de sílabas
-          </p>
-        </div>
-
-        {/* Slot count selector */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 14 }}>
-          {[2, 3].map(n => (
-            <button key={n} onClick={() => changeSlotCount(n)} style={{
-              padding: "6px 18px", borderRadius: 14, fontSize: 14, fontWeight: 700,
-              fontFamily: "'Fredoka', sans-serif", border: "2px solid #FF9800",
-              background: slotCount === n ? "#FF9800" : "white",
-              color: slotCount === n ? "white" : "#E65100", cursor: "pointer",
-            }}>
-              {n} sílabas
-            </button>
-          ))}
-        </div>
-
-        {/* Slots */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 10 }}>
-          {slots.map((s, i) => (
-            <button key={i} onClick={() => removeSlot(i)} style={{
-              width: 85, height: 72, borderRadius: 16,
-              border: `4px dashed ${s ? "#FF9800" : "#ccc"}`,
-              background: s ? "#FFF3E0" : "rgba(255,255,255,0.5)",
-              fontSize: 28, fontWeight: 800, fontFamily: "'Fredoka', sans-serif",
-              color: "#E65100", cursor: s ? "pointer" : "default",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.2s",
-            }}>
-              {s || ""}
-            </button>
-          ))}
-        </div>
-
-        {/* Action buttons */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 14 }}>
-          <button onClick={clearSlots} disabled={filledCount === 0 || !!feedback} style={{
-            padding: "8px 20px", borderRadius: 14, fontSize: 15, fontWeight: 600,
-            fontFamily: "'Fredoka', sans-serif", border: "2px solid #ccc",
-            background: "white", color: "#888", cursor: filledCount === 0 ? "default" : "pointer",
-            opacity: filledCount === 0 ? 0.4 : 1,
-          }}>
-            🗑️ Borrar
-          </button>
-          <button onClick={checkWord} disabled={slots.includes(null) || !!feedback} style={{
-            padding: "8px 24px", borderRadius: 14, fontSize: 15, fontWeight: 700,
-            fontFamily: "'Fredoka', sans-serif", border: "none",
-            background: slots.includes(null) ? "#ccc" : "#4CAF50",
-            color: "white", cursor: slots.includes(null) ? "default" : "pointer",
-            boxShadow: slots.includes(null) ? "none" : "0 4px 12px rgba(76,175,80,0.3)",
-          }}>
-            ✅ Comprobar
-          </button>
-        </div>
-
-        {/* Feedback */}
-        {feedback && (
-          <div style={{ fontSize: 24, marginBottom: 12, fontFamily: "'Fredoka', sans-serif", animation: "popIn 0.3s ease" }}>
-            {feedback.type === "correct" && <span>{feedback.emoji} ¡{feedback.word} es correcto!</span>}
-            {feedback.type === "wrong" && <span>❌ "{feedback.word}" no es una palabra</span>}
-            {feedback.type === "repeat" && <span>🔄 ¡Ya encontraste "{feedback.word}"!</span>}
-          </div>
-        )}
-
-        {/* Syllable cards grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8, marginBottom: 16 }}>
-          {/* Vowel cards */}
-          {["A", "E", "I", "O", "U"].map(v => {
-            const vColors = { A: "#4CAF50", E: "#F44336", I: "#9C27B0", O: "#FFC107", U: "#2196F3" };
-            return (
-              <button key={v} onClick={() => handleCardTap(v)} disabled={!!feedback} style={{
-                padding: "12px 4px", borderRadius: 14, fontSize: 24, fontWeight: 800,
-                fontFamily: "'Fredoka', sans-serif",
-                border: `3px solid ${vColors[v]}`,
-                background: `${vColors[v]}15`, color: vColors[v],
-                cursor: feedback ? "default" : "pointer",
-                boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
-                transition: "all 0.15s",
-              }}>
-                {v}
-              </button>
-            );
-          })}
-          {/* Consonant syllable cards */}
-          {["M", "P", "L", "S"].map(letter => (
-            ["A", "E", "I", "O", "U"].map(vowel => {
-              const syl = letter + vowel;
-              const colors = { M: "#FF6B6B", P: "#4ECDC4", L: "#FFD93D", S: "#6C5CE7" };
-              return (
-                <button key={syl} onClick={() => handleCardTap(syl)} disabled={!!feedback} style={{
-                  padding: "12px 4px", borderRadius: 14, fontSize: 22, fontWeight: 700,
-                  fontFamily: "'Fredoka', sans-serif",
-                  border: `3px solid ${colors[letter]}`,
-                  background: "white", color: colors[letter],
-                  cursor: feedback ? "default" : "pointer",
-                  boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
-                  transition: "all 0.15s",
-                }}>
-                  {syl}
-                </button>
-              );
-            })
-          ))}
-        </div>
-
-        {/* Found words */}
-        {found.length > 0 && (
-          <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: 20, padding: "12px 16px", textAlign: "left" }}>
-            <div style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 14, color: "#888", marginBottom: 8 }}>
-              Palabras encontradas ({found.length}):
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {found.map((w, i) => (
-                <span key={i} style={{
-                  background: "#FFF3E0", border: "2px solid #FFB74D", borderRadius: 12,
-                  padding: "4px 12px", fontSize: 16, fontWeight: 600,
-                  fontFamily: "'Fredoka', sans-serif", color: "#E65100",
-                }}>
-                  {VALID_WORDS[w]} {w}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {found.length >= 15 && (
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            <div style={{ fontSize: 28, fontFamily: "'Fredoka', sans-serif" }}>🏆 ¡Increíble!</div>
-            <button onClick={reset} style={{ ...styles.primaryBtn, background: "#FF9800", marginTop: 12 }}>Jugar de nuevo 🔄</button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ===== ACTIVITY: IMAGE WORD MATCH ===== */
-function ImageWordMatch({ onBack }) {
-  const [items, setItems] = useState(() => shuffle(IMAGE_WORDS).slice(0, 10));
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [score, setScore] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const current = items[currentIdx];
-
-  const handleSelect = (opt) => {
-    if (selected) return;
-    setSelected(opt);
-    if (opt === current.word) {
-      setScore(prev => prev + 1);
-      if (currentIdx === items.length - 1) { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 2500); }
-    }
-    setTimeout(() => {
-      if (currentIdx < items.length - 1) { setCurrentIdx(prev => prev + 1); setSelected(null); }
-    }, 1200);
-  };
-
-  const reset = () => { setItems(shuffle(IMAGE_WORDS).slice(0, 10)); setCurrentIdx(0); setScore(0); setSelected(null); };
-  const done = currentIdx === items.length - 1 && selected;
-
-  return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)", padding: "16px 12px" }}>
-      <ConfettiEffect show={showConfetti} />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <button onClick={onBack} style={styles.backBtn}>← Menú</button>
-        <ScoreBar score={score} total={items.length} />
-      </div>
-      <div style={{ maxWidth: 500, margin: "0 auto", textAlign: "center" }}>
-        <div style={{ marginBottom: 12 }}>
-          <span style={{ background: "#1976D2", color: "white", padding: "6px 20px", borderRadius: 20, fontSize: 16, fontWeight: 700, fontFamily: "'Fredoka', sans-serif" }}>
-            ¿Cuál es la palabra? ({currentIdx + 1}/{items.length})
-          </span>
-        </div>
-        <div style={{ fontSize: 100, marginBottom: 8 }}>{current.emoji}</div>
-        {selected && (
-          <div style={{ fontSize: 28, marginBottom: 12, fontFamily: "'Fredoka', sans-serif", animation: "popIn 0.3s ease" }}>
-            {selected === current.word ? "✅ ¡Correcto!" : `❌ Era: ${current.word}`}
-          </div>
-        )}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 320, margin: "0 auto" }}>
-          {current.options.map((opt, i) => (
-            <button key={i} onClick={() => handleSelect(opt)} disabled={selected !== null} style={{
-              padding: "16px 24px", borderRadius: 16, fontSize: 30, fontWeight: 700,
-              fontFamily: "'Fredoka', sans-serif", letterSpacing: 4,
-              border: `3px solid ${selected ? (opt === current.word ? "#4CAF50" : "#ddd") : "#1976D2"}`,
-              background: selected ? (opt === current.word ? "#C8E6C9" : "white") : "white",
-              color: "#333", cursor: selected ? "default" : "pointer",
-              transition: "all 0.2s",
-            }}>
-              {opt}
-            </button>
-          ))}
-        </div>
-        {done && (
-          <button onClick={reset} style={{ ...styles.primaryBtn, background: "#1976D2", marginTop: 24 }}>
-            Jugar de nuevo 🔄
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ===== MAIN MENU ===== */
-function MainMenu({ onSelect }) {
-  const activities = [
-    { id: "vowels", emoji: "🔤", title: "Encuentra las vocales", desc: "A E I O U", color: "#FF6B6B", bg: "#FFE8E8" },
-    { id: "syl-M", emoji: "Ⓜ️", title: "Sílabas con M", desc: "ma me mi mo mu", color: "#FF6B6B", bg: "#FFE8E8" },
-    { id: "syl-P", emoji: "🅿️", title: "Sílabas con P", desc: "pa pe pi po pu", color: "#4ECDC4", bg: "#E0F7FA" },
-    { id: "syl-L", emoji: "📝", title: "Sílabas con L", desc: "la le li lo lu", color: "#FFD93D", bg: "#FFFDE7" },
-    { id: "syl-S", emoji: "⭐", title: "Sílabas con S", desc: "sa se si so su", color: "#6C5CE7", bg: "#EDE7F6" },
-    { id: "reading", emoji: "📖", title: "Comprensión lectora", desc: "Lee y responde", color: "#4CAF50", bg: "#E8F5E9" },
-    { id: "words", emoji: "🧩", title: "Forma palabras", desc: "Usa las tarjetas", color: "#FF9800", bg: "#FFF3E0" },
-    { id: "imgword", emoji: "🖼️", title: "Nombre de la imagen", desc: "¿Qué palabra es?", color: "#1976D2", bg: "#E3F2FD" },
-  ];
-
-  return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg, #667eea 0%, #764ba2 100%)", padding: "20px 12px" }}>
-      <div style={{ textAlign: "center", marginBottom: 20, paddingTop: 12 }}>
-        <div style={{ fontSize: 48, marginBottom: 4 }}>📚</div>
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 30, color: "white", margin: 0, textShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
-          Magic Words
-        </h1>
-        <p style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 16, color: "rgba(255,255,255,0.85)", margin: "4px 0 0" }}>
-          Primer grado — Elige una actividad
-        </p>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, maxWidth: 480, margin: "0 auto" }}>
-        {activities.map(a => (
-          <button key={a.id} onClick={() => onSelect(a.id)} style={{
-            background: "white", borderRadius: 20, padding: "16px 12px", border: "none",
-            cursor: "pointer", textAlign: "center", boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
-            transition: "transform 0.2s", display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-          }}
-          onPointerDown={e => e.currentTarget.style.transform = "scale(0.95)"}
-          onPointerUp={e => e.currentTarget.style.transform = "scale(1)"}
-          onPointerLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-            <span style={{ fontSize: 40 }}>{a.emoji}</span>
-            <span style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 17, fontWeight: 700, color: a.color }}>{a.title}</span>
-            <span style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 13, color: "#999", background: a.bg, padding: "2px 10px", borderRadius: 10 }}>{a.desc}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ===== APP ROOT ===== */
-function App() {
-  const [screen, setScreen] = useState("menu");
-
-  return (
-    <div style={{ fontFamily: "'Fredoka', sans-serif", touchAction: "manipulation", userSelect: "none", WebkitUserSelect: "none" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { overscroll-behavior: none; }
-        @keyframes popStar { 0% { transform: scale(0); opacity: 1; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
-        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
-        button { font-family: 'Fredoka', sans-serif; }
-      `}</style>
-      {screen === "menu" && <MainMenu onSelect={setScreen} />}
-      {screen === "vowels" && <VowelFinder onBack={() => setScreen("menu")} />}
-      {screen === "syl-M" && <SyllableComplete letter="M" onBack={() => setScreen("menu")} />}
-      {screen === "syl-P" && <SyllableComplete letter="P" onBack={() => setScreen("menu")} />}
-      {screen === "syl-L" && <SyllableComplete letter="L" onBack={() => setScreen("menu")} />}
-      {screen === "syl-S" && <SyllableComplete letter="S" onBack={() => setScreen("menu")} />}
-      {screen === "reading" && <ReadingComp onBack={() => setScreen("menu")} />}
-      {screen === "words" && <WordBuilder onBack={() => setScreen("menu")} />}
-      {screen === "imgword" && <ImageWordMatch onBack={() => setScreen("menu")} />}
-    </div>
-  );
-}
-
-const styles = {
-  backBtn: {
-    background: "rgba(255,255,255,0.85)", border: "none", borderRadius: 16,
-    padding: "8px 16px", fontSize: 16, fontWeight: 600, cursor: "pointer",
-    color: "#555", boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  },
-  primaryBtn: {
-    border: "none", borderRadius: 20, padding: "14px 32px", fontSize: 18,
-    fontWeight: 700, color: "white", cursor: "pointer",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
-  },
+const NOUN_DATA = {
+  nouns:["mano","dado","tío","abuela","mono","lápiz","cama","playa","mesa","flor","Pablo","libro","ventana","niño","hermano","perro","escuela","mamá","amigo","tomate"],
+  nonNouns:["amable","amigable","divertido","caminar","jugar","correr","comer","leer","dormir","pasear","vamos","vivir","hermoso"],
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
-setTimeout(() => {
-  const splash = document.getElementById('splash');
-  if (splash) { splash.classList.add('hide'); setTimeout(() => splash.remove(), 500); }
-}, 300);
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registered:', reg.scope))
-          .catch(err => console.warn('SW registration failed:', err));
-      });
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function genGrid(){const v=["a","e","i","o","u"];return Array.from({length:48},()=>v[Math.floor(Math.random()*5)]);}
+
+function ConfettiEffect({show}){if(!show)return null;const p=Array.from({length:30},(_,i)=>({id:i,left:Math.random()*100,delay:Math.random()*0.5,color:["#FF6B6B","#4ECDC4","#FFD93D","#6C5CE7","#FF9FF3","#54A0FF"][Math.floor(Math.random()*6)],size:8+Math.random()*12}));return<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999,overflow:"hidden"}}>{p.map(p=><div key={p.id} style={{position:"absolute",top:-20,left:`${p.left}%`,width:p.size,height:p.size,backgroundColor:p.color,borderRadius:p.size>14?"50%":"2px",animation:`confettiFall 2s ease-in ${p.delay}s forwards`}}/>)}</div>;}
+function ScoreBar({score,total}){const pct=total>0?(score/total)*100:0;return<div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 16px",background:"rgba(255,255,255,0.3)",borderRadius:20,backdropFilter:"blur(8px)"}}><span style={{fontSize:22}}>⭐</span><div style={{flex:1,height:14,background:"rgba(0,0,0,0.1)",borderRadius:7,overflow:"hidden",minWidth:80}}><div style={{width:`${pct}%`,height:"100%",background:"linear-gradient(90deg,#FFD700,#FFA500)",borderRadius:7,transition:"width 0.5s ease"}}/></div><span style={{fontWeight:700,fontSize:16,color:"#333"}}>{score}/{total}</span></div>;}
+
+function VowelFinder({onBack}){const[tv,setTv]=useState("a");const[grid,setGrid]=useState(()=>genGrid());const[tapped,setTapped]=useState(new Set());const[score,setScore]=useState(0);const[showC,setShowC]=useState(false);const total=grid.filter(v=>v===tv).length;const handleTap=(i,e)=>{if(tapped.has(i))return;if(grid[i]===tv){setTapped(p=>new Set([...p,i]));setScore(p=>p+1);if(score+1===total){setShowC(true);setTimeout(()=>setShowC(false),2500);}}};const next=()=>{const vs=["a","e","i","o","u"];setTv(vs[(vs.indexOf(tv)+1)%5]);setGrid(genGrid());setTapped(new Set());setScore(0);};return<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#FFECD2 0%,#FCB69F 100%)",padding:"16px 12px"}}><ConfettiEffect show={showC}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><button onClick={onBack} style={S.backBtn}>← Menú</button><ScoreBar score={score} total={total}/></div><div style={{textAlign:"center",marginBottom:12}}><div style={{display:"inline-flex",alignItems:"center",gap:14,background:"white",padding:"10px 28px",borderRadius:24,boxShadow:"0 4px 20px rgba(0,0,0,0.1)"}}><span style={{fontSize:20,fontWeight:600,color:"#555"}}>Toca la letra:</span><span style={{fontSize:52,fontWeight:800,color:VOWEL_COLORS[tv],lineHeight:1}}>{tv}</span></div></div><div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:6,maxWidth:500,margin:"0 auto"}}>{grid.map((l,i)=>{const it=tapped.has(i);return<button key={i} onClick={e=>handleTap(i,e)} style={{width:"100%",aspectRatio:"1",borderRadius:"50%",border:`3px solid ${it?VOWEL_COLORS[tv]:"#ddd"}`,background:it?VOWEL_COLORS[tv]:"white",color:it?"white":"#555",fontSize:22,fontWeight:700,cursor:"pointer",transition:"all 0.2s",transform:it?"scale(0.9)":"scale(1)"}}>{l}</button>})}</div>{score===total&&<div style={{textAlign:"center",marginTop:16}}><div style={{fontSize:28}}>🎉 ¡Muy bien!</div><button onClick={next} style={{...S.primaryBtn,background:VOWEL_COLORS[tv],marginTop:8}}>Siguiente vocal →</button></div>}</div>;}
+
+function SyllableComplete({letter,onBack}){const all=SYLLABLE_WORDS[letter];const[words,setWords]=useState(()=>shuffle(all).slice(0,10));const[ci,setCi]=useState(0);const[score,setScore]=useState(0);const[sel,setSel]=useState(null);const[showC,setShowC]=useState(false);const syls=[`${letter}A`,`${letter}E`,`${letter}I`,`${letter}O`,`${letter}U`];const cur=words[ci];const correct=cur.parts[cur.blank].replace(/[ÁÉÍÓÚ]/g,m=>({Á:"A",É:"E",Í:"I",Ó:"O",Ú:"U"}[m]));const handle=(s)=>{if(sel!==null)return;setSel(s);if(s===correct){setScore(p=>p+1);if(ci===words.length-1){setShowC(true);setTimeout(()=>setShowC(false),2500);}}setTimeout(()=>{if(ci<words.length-1){setCi(p=>p+1);setSel(null);}},1200);};const reset=()=>{setWords(shuffle(all).slice(0,10));setCi(0);setScore(0);setSel(null);};const color=CONSONANT_COLORS[letter];return<div style={{minHeight:"100vh",background:`linear-gradient(135deg,${color}22 0%,${color}44 100%)`,padding:"16px 12px"}}><ConfettiEffect show={showC}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button><ScoreBar score={score} total={words.length}/></div><div style={{textAlign:"center",marginBottom:8}}><span style={{background:color,color:"white",padding:"6px 24px",borderRadius:20,fontSize:18,fontWeight:700}}>Sílabas con {letter} ({ci+1}/{words.length})</span></div><div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:20,marginTop:16}}><div style={{fontSize:80,lineHeight:1}}>{cur.emoji}</div><div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap",justifyContent:"center"}}>{cur.parts.map((p,i)=><span key={i} style={{fontSize:42,fontWeight:800,color:i===cur.blank?color:"#333",background:i===cur.blank?(sel?(sel===correct?"#C8E6C9":"#FFCDD2"):`${color}20`):"transparent",padding:"4px 12px",borderRadius:12,minWidth:60,textAlign:"center",border:i===cur.blank?`3px dashed ${color}`:"none"}}>{i===cur.blank?(sel||"___"):p}</span>)}</div>{sel&&<div style={{fontSize:36,animation:"popIn 0.3s ease"}}>{sel===correct?"✅ ¡Correcto!":"❌ Intenta de nuevo"}</div>}<div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center",marginTop:8}}>{syls.map(s=><button key={s} onClick={()=>handle(s)} disabled={sel!==null} style={{fontSize:30,fontWeight:700,padding:"12px 24px",borderRadius:16,border:`3px solid ${color}`,background:sel===s?(s===correct?"#4CAF50":"#F44336"):"white",color:sel===s?"white":color,cursor:sel?"default":"pointer",minWidth:70,opacity:sel&&sel!==s?0.5:1}}>{s}</button>)}</div></div>{ci===words.length-1&&sel&&<div style={{textAlign:"center",marginTop:24}}><div style={{fontSize:28,marginBottom:12}}>🌟 {score}/{words.length}</div><button onClick={reset} style={{...S.primaryBtn,background:color}}>Jugar de nuevo 🔄</button></div>}</div>;}
+
+function ReadingComp({onBack}){const[si,setSi]=useState(0);const[qi,setQi]=useState(-1);const[ans,setAns]=useState({});const[showC,setShowC]=useState(false);const st=READING_STORIES[si];const score=Object.values(ans).filter(a=>a.correct).length;const hAns=(qI,aI)=>{if(ans[qI]!==undefined)return;const c=st.questions[qI].answer===aI;setAns(p=>({...p,[qI]:{selected:aI,correct:c}}));if(Object.keys(ans).length+1===st.questions.length&&c){setShowC(true);setTimeout(()=>setShowC(false),2500);}};const next=()=>{setSi((si+1)%READING_STORIES.length);setQi(-1);setAns({});};return<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#E8F5E9 0%,#C8E6C9 100%)",padding:"16px 12px"}}><ConfettiEffect show={showC}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button><ScoreBar score={score} total={st.questions.length}/></div>{qi===-1?<div style={{maxWidth:500,margin:"0 auto"}}><div style={{background:"white",borderRadius:24,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,0.1)"}}><div style={{textAlign:"center",marginBottom:16}}><span style={{fontSize:64}}>{st.emoji}</span><h2 style={{fontSize:28,color:"#2E7D32",margin:"8px 0"}}>{st.title}</h2></div><div style={{fontSize:22,lineHeight:1.8,color:"#333",textAlign:"center",whiteSpace:"pre-line"}}>{st.text}</div></div><div style={{textAlign:"center",marginTop:20}}><button onClick={()=>setQi(0)} style={{...S.primaryBtn,background:"#4CAF50",fontSize:22}}>📝 Responder preguntas</button></div></div>:<div style={{maxWidth:500,margin:"0 auto"}}><div style={{textAlign:"center",marginBottom:12}}><span style={{background:"#4CAF50",color:"white",padding:"6px 20px",borderRadius:20,fontSize:16,fontWeight:700}}>Pregunta {qi+1} de {st.questions.length}</span></div><div style={{background:"white",borderRadius:24,padding:24,boxShadow:"0 8px 32px rgba(0,0,0,0.1)"}}><p style={{fontSize:24,fontWeight:700,color:"#333",textAlign:"center",marginBottom:20}}>{st.questions[qi].q}</p><div style={{display:"flex",flexDirection:"column",gap:12}}>{st.questions[qi].options.map((o,i)=>{const a=ans[qi];const answered=a!==undefined;const wasSel=answered&&a.selected===i;const gotRight=answered&&a.correct;let bc="#4CAF50",bg="white",px="";if(answered){if(wasSel&&gotRight){bc="#4CAF50";bg="#C8E6C9";px="✅ ";}else if(wasSel&&!gotRight){bc="#F44336";bg="#FFCDD2";px="❌ ";}else{bc="#ddd";}}return<button key={i} onClick={()=>hAns(qi,i)} disabled={answered} style={{padding:"14px 20px",borderRadius:16,fontSize:22,fontWeight:600,cursor:answered?"default":"pointer",border:`3px solid ${bc}`,background:bg,color:"#333",textAlign:"left"}}>{px}{o}</button>})}</div>{ans[qi]&&!ans[qi].correct&&<p style={{textAlign:"center",marginTop:14,fontSize:16,color:"#888"}}>💡 Vuelve a leer la historia e intenta de nuevo</p>}</div><div style={{display:"flex",justifyContent:"center",gap:12,marginTop:16}}>{qi>0&&<button onClick={()=>setQi(qi-1)} style={{...S.primaryBtn,background:"#78909C"}}>← Anterior</button>}{qi<st.questions.length-1&&ans[qi]!==undefined&&<button onClick={()=>setQi(qi+1)} style={{...S.primaryBtn,background:"#4CAF50"}}>Siguiente →</button>}{qi===st.questions.length-1&&ans[qi]!==undefined&&<button onClick={next} style={{...S.primaryBtn,background:"#FF9800"}}>Otra historia 📖</button>}</div><div style={{textAlign:"center",marginTop:8}}><button onClick={()=>setQi(-1)} style={{fontSize:14,color:"#666",background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}>Volver a leer</button></div></div>}</div>;}
+
+function WordBuilder({onBack}){
+  const MAX=10;
+  const[slots,setSlots]=useState([null,null]);
+  const[words,setWords]=useState([]);
+  const[sc,setSc]=useState(2);
+  const[phase,setPhase]=useState("build"); // build | review | done
+  const[reviews,setReviews]=useState({});
+  const[showC,setShowC]=useState(false);
+  const vc={A:"#4CAF50",E:"#F44336",I:"#9C27B0",O:"#FFC107",U:"#2196F3"};
+  const cls=["M","P","L","S","T","N","D","F"];
+
+  const hCard=(s)=>{const e=slots.indexOf(null);if(e===-1)return;const n=[...slots];n[e]=s;setSlots(n);};
+  const rm=(i)=>{const n=[...slots];n[i]=null;setSlots(n);};
+  const clear=()=>setSlots(Array(sc).fill(null));
+  const chSc=(n)=>{setSlots(Array(n).fill(null));setSc(n);};
+
+  const addWord=()=>{
+    if(slots.includes(null))return;
+    const w=slots.join("");
+    if(words.includes(w))return;
+    setWords(p=>[...p,w]);
+    setSlots(Array(sc).fill(null));
+  };
+
+  const removeWord=(i)=>{setWords(p=>p.filter((_,j)=>j!==i));};
+
+  const startReview=()=>setPhase("review");
+  const reviewWord=(i,correct)=>{
+    const nr={...reviews,[i]:correct};
+    setReviews(nr);
+    const answered=Object.keys(nr).length;
+    if(answered===words.length){
+      const score=Object.values(nr).filter(Boolean).length;
+      if(score===words.length){setShowC(true);setTimeout(()=>setShowC(false),2500);}
+      setTimeout(()=>setPhase("done"),400);
     }
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      setTimeout(() => {
-        if (deferredPrompt) {
-          const btn = document.createElement('button');
-          btn.textContent = '📲 Instalar App';
-          btn.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:14px 28px;border:none;border-radius:20px;background:#667eea;color:white;font-size:18px;font-weight:700;font-family:Fredoka,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,0.3);cursor:pointer;';
-          btn.onclick = async () => {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            btn.remove();
-          };
-          document.body.appendChild(btn);
-          setTimeout(() => btn.remove(), 10000);
-        }
-      }, 3000);
-    });
-  </script>
-</body>
-</html>
+  };
+  const reset=()=>{setSlots([null,null]);setSc(2);setWords([]);setPhase("build");setReviews({});};
+  const filled=slots.filter(Boolean).length;
+  const score=Object.values(reviews).filter(Boolean).length;
+  const full=words.length>=MAX;
+
+  if(phase==="review") return <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#E8F5E9 0%,#C8E6C9 100%)",padding:"16px 12px"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button></div>
+    <div style={{maxWidth:500,margin:"0 auto",textAlign:"center"}}>
+      <div style={{background:"white",borderRadius:20,padding:20,marginBottom:16,boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
+        <div style={{fontSize:40,marginBottom:8}}>👨‍👩‍👧</div>
+        <h2 style={{fontSize:22,color:"#2E7D32",marginBottom:4}}>Revisión de un adulto</h2>
+        <p style={{fontSize:16,color:"#888"}}>Toca ✅ si la palabra es correcta o ❌ si no lo es</p>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {words.map((w,i)=>{
+          const r=reviews[i];
+          return <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"white",borderRadius:16,padding:"12px 16px",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",border:r===undefined?"2px solid #ddd":r?"2px solid #4CAF50":"2px solid #F44336"}}>
+            <span style={{flex:1,fontSize:28,fontWeight:800,color:"#333",letterSpacing:3,textAlign:"left"}}>{w}</span>
+            {r===undefined?<>
+              <button onClick={()=>reviewWord(i,true)} style={{width:52,height:52,borderRadius:14,border:"none",background:"#C8E6C9",fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✅</button>
+              <button onClick={()=>reviewWord(i,false)} style={{width:52,height:52,borderRadius:14,border:"none",background:"#FFCDD2",fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>❌</button>
+            </>:<span style={{fontSize:32}}>{r?"✅":"❌"}</span>}
+          </div>
+        })}
+      </div>
+    </div>
+  </div>;
+
+  if(phase==="done") return <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#FFF3E0 0%,#FFE0B2 100%)",padding:"16px 12px"}}>
+    <ConfettiEffect show={showC}/>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button></div>
+    <div style={{maxWidth:500,margin:"0 auto",textAlign:"center",marginTop:40}}>
+      <div style={{fontSize:72}}>{score===words.length?"🏆":score>=words.length/2?"🌟":"💪"}</div>
+      <h2 style={{fontSize:28,color:"#E65100",margin:"12px 0"}}>Resultado</h2>
+      <p style={{fontSize:24,color:"#555",marginBottom:8}}>{score} de {words.length} correctas</p>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:16,marginBottom:20}}>
+        {words.map((w,i)=><div key={i} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,fontSize:24,fontWeight:700,color:reviews[i]?"#4CAF50":"#F44336"}}>
+          <span>{reviews[i]?"✅":"❌"}</span><span style={{letterSpacing:3}}>{w}</span>
+        </div>)}
+      </div>
+      <button onClick={reset} style={{...S.primaryBtn,background:"#FF9800"}}>Jugar de nuevo 🔄</button>
+    </div>
+  </div>;
+
+  return <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#FFF3E0 0%,#FFE0B2 100%)",padding:"16px 12px"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+      <button onClick={onBack} style={S.backBtn}>← Menú</button>
+      <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.3)",padding:"6px 14px",borderRadius:20}}>
+        <span style={{fontSize:20}}>🧩</span>
+        <span style={{fontWeight:700,fontSize:16,color:"#333"}}>{words.length}/{MAX}</span>
+      </div>
+    </div>
+    <div style={{maxWidth:500,margin:"0 auto",textAlign:"center"}}>
+      <h2 style={{fontSize:22,color:"#E65100",margin:"0 0 4px"}}>🧩 ¡Forma palabras!</h2>
+      <p style={{fontSize:14,color:"#999",marginBottom:8}}>Forma {MAX} palabras y luego pide a un adulto que las revise</p>
+
+      <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10}}>
+        {[2,3].map(n=><button key={n} onClick={()=>chSc(n)} style={{padding:"6px 18px",borderRadius:14,fontSize:14,fontWeight:700,border:"2px solid #FF9800",background:sc===n?"#FF9800":"white",color:sc===n?"white":"#E65100",cursor:"pointer"}}>{n} sílabas</button>)}
+      </div>
+
+      <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:10}}>
+        {slots.map((s,i)=><button key={i} onClick={()=>rm(i)} style={{width:85,height:72,borderRadius:16,border:`4px dashed ${s?"#FF9800":"#ccc"}`,background:s?"#FFF3E0":"rgba(255,255,255,0.5)",fontSize:28,fontWeight:800,color:"#E65100",cursor:s?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>{s||""}</button>)}
+      </div>
+
+      <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:10}}>
+        <button onClick={clear} disabled={filled===0} style={{padding:"8px 20px",borderRadius:14,fontSize:15,fontWeight:600,border:"2px solid #ccc",background:"white",color:"#888",cursor:filled===0?"default":"pointer",opacity:filled===0?0.4:1}}>🗑️ Borrar</button>
+        <button onClick={addWord} disabled={slots.includes(null)||full||words.includes(slots.join(""))} style={{padding:"8px 24px",borderRadius:14,fontSize:15,fontWeight:700,border:"none",background:(slots.includes(null)||full)?"#ccc":"#FF9800",color:"white",cursor:(slots.includes(null)||full)?"default":"pointer"}}>➕ Agregar</button>
+      </div>
+
+      {words.includes(slots.join(""))&&!slots.includes(null)&&<p style={{fontSize:14,color:"#F44336",marginBottom:8}}>Ya agregaste esa palabra</p>}
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5,marginBottom:12}}>
+        {["A","E","I","O","U"].map(v=><button key={v} onClick={()=>hCard(v)} disabled={full} style={{padding:"8px 2px",borderRadius:10,fontSize:20,fontWeight:800,border:`2px solid ${vc[v]}`,background:`${vc[v]}15`,color:vc[v],cursor:full?"default":"pointer"}}>{v}</button>)}
+        {cls.map(l=>["A","E","I","O","U"].map(v=>{const s=l+v;return<button key={s} onClick={()=>hCard(s)} disabled={full} style={{padding:"8px 2px",borderRadius:10,fontSize:16,fontWeight:700,border:`2px solid ${CONSONANT_COLORS[l]}`,background:"white",color:CONSONANT_COLORS[l],cursor:full?"default":"pointer"}}>{s}</button>}))}
+      </div>
+
+      {words.length>0&&<div style={{background:"rgba(255,255,255,0.7)",borderRadius:20,padding:"12px 16px",textAlign:"left",marginBottom:12}}>
+        <div style={{fontSize:14,color:"#888",marginBottom:8}}>Mis palabras ({words.length}/{MAX}):</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {words.map((w,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
+            <span style={{background:"#FFF3E0",border:"2px solid #FFB74D",borderRadius:12,padding:"3px 10px",fontSize:16,fontWeight:600,color:"#E65100"}}>{w}</span>
+            <button onClick={()=>removeWord(i)} style={{width:24,height:24,borderRadius:12,border:"none",background:"#FFCDD2",color:"#F44336",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>×</button>
+          </div>)}
+        </div>
+      </div>}
+
+      {words.length>=1&&<button onClick={startReview} style={{...S.primaryBtn,background:full?"#4CAF50":"#78909C",marginTop:4,fontSize:full?20:16}}>
+        {full?"📋 ¡Listo! Pedir revisión":"📋 Revisar ahora ({0} de {MAX})".replace("{0}",words.length).replace("{MAX}",MAX)}
+      </button>}
+    </div>
+  </div>;
+}
+
+function ImageWordMatch({onBack}){const[items,setItems]=useState(()=>shuffle(IMAGE_WORDS).slice(0,10));const[ci,setCi]=useState(0);const[sel,setSel]=useState(null);const[score,setScore]=useState(0);const[showC,setShowC]=useState(false);const cur=items[ci];const hSel=(o)=>{if(sel)return;setSel(o);if(o===cur.word){setScore(p=>p+1);if(ci===items.length-1){setShowC(true);setTimeout(()=>setShowC(false),2500);}}setTimeout(()=>{if(ci<items.length-1){setCi(p=>p+1);setSel(null);}},1200);};const reset=()=>{setItems(shuffle(IMAGE_WORDS).slice(0,10));setCi(0);setScore(0);setSel(null);};const done=ci===items.length-1&&sel;return<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#E3F2FD 0%,#BBDEFB 100%)",padding:"16px 12px"}}><ConfettiEffect show={showC}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button><ScoreBar score={score} total={items.length}/></div><div style={{maxWidth:500,margin:"0 auto",textAlign:"center"}}><div style={{marginBottom:12}}><span style={{background:"#1976D2",color:"white",padding:"6px 20px",borderRadius:20,fontSize:16,fontWeight:700}}>¿Cuál es la palabra? ({ci+1}/{items.length})</span></div><div style={{fontSize:100,marginBottom:8}}>{cur.emoji}</div>{sel&&<div style={{fontSize:28,marginBottom:12,animation:"popIn 0.3s ease"}}>{sel===cur.word?"✅ ¡Correcto!":"❌ Intenta de nuevo"}</div>}<div style={{display:"flex",flexDirection:"column",gap:12,maxWidth:320,margin:"0 auto"}}>{cur.options.map((o,i)=><button key={i} onClick={()=>hSel(o)} disabled={sel!==null} style={{padding:"16px 24px",borderRadius:16,fontSize:30,fontWeight:700,letterSpacing:4,border:`3px solid ${sel?(o===cur.word?"#4CAF50":sel===o?"#F44336":"#ddd"):"#1976D2"}`,background:sel?(o===cur.word?"#C8E6C9":sel===o?"#FFCDD2":"white"):"white",color:"#333",cursor:sel?"default":"pointer"}}>{o}</button>)}</div>{done&&<button onClick={reset} style={{...S.primaryBtn,background:"#1976D2",marginTop:24}}>Jugar de nuevo 🔄</button>}</div></div>;}
+
+function SemanticFields({onBack}){const[rounds]=useState(()=>shuffle(SEMANTIC_FIELDS));const[ci,setCi]=useState(0);const[sel,setSel]=useState(null);const[score,setScore]=useState(0);const[showC,setShowC]=useState(false);const cur=rounds[ci];const[allItems]=useState(()=>rounds.map(r=>shuffle([...r.items,r.intruder])));const items=allItems[ci];const hTap=(item)=>{if(sel!==null)return;setSel(item);if(item===cur.intruder){setScore(p=>p+1);if(ci===rounds.length-1){setShowC(true);setTimeout(()=>setShowC(false),2500);}}setTimeout(()=>{if(ci<rounds.length-1){setCi(p=>p+1);setSel(null);}},1500);};const reset=()=>{setCi(0);setScore(0);setSel(null);};const done=ci===rounds.length-1&&sel;return<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#F3E5F5 0%,#E1BEE7 100%)",padding:"16px 12px"}}><ConfettiEffect show={showC}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button><ScoreBar score={score} total={rounds.length}/></div><div style={{maxWidth:500,margin:"0 auto",textAlign:"center"}}><div style={{marginBottom:12}}><span style={{background:"#9C27B0",color:"white",padding:"6px 20px",borderRadius:20,fontSize:16,fontWeight:700}}>🔍 Encuentra el intruso ({ci+1}/{rounds.length})</span></div><h3 style={{fontSize:24,color:"#6A1B9A",marginBottom:16}}>{cur.category}</h3><p style={{fontSize:16,color:"#888",marginBottom:12}}>¿Cuál NO pertenece al grupo?</p><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>{items.map((item,i)=>{const isInt=item===cur.intruder;const wasSel=sel===item;let bg="white",bc="#9C27B0";if(sel!==null){if(wasSel&&isInt){bg="#C8E6C9";bc="#4CAF50";}else if(wasSel&&!isInt){bg="#FFCDD2";bc="#F44336";}else if(isInt&&sel!==cur.intruder){bg="#C8E6C9";bc="#4CAF50";}else{bc="#ddd";}}return<button key={i} onClick={()=>hTap(item)} disabled={sel!==null} style={{padding:"14px 10px",borderRadius:16,fontSize:18,fontWeight:600,border:`3px solid ${bc}`,background:bg,color:"#333",cursor:sel?"default":"pointer"}}>{item}</button>})}</div>{sel&&<div style={{marginTop:16,fontSize:24,animation:"popIn 0.3s ease"}}>{sel===cur.intruder?"✅ ¡Correcto!":"❌ Ese sí pertenece al grupo"}</div>}{done&&<button onClick={reset} style={{...S.primaryBtn,background:"#9C27B0",marginTop:20}}>Jugar de nuevo 🔄</button>}</div></div>;}
+
+function NounGame({onBack}){const[words]=useState(()=>{const n=shuffle(NOUN_DATA.nouns).slice(0,8);const nn=shuffle(NOUN_DATA.nonNouns).slice(0,7);return shuffle([...n.map(w=>({word:w,isNoun:true})),...nn.map(w=>({word:w,isNoun:false}))]);});const[tapped,setTapped]=useState({});const[showC,setShowC]=useState(false);const total=words.filter(w=>w.isNoun).length;const score=Object.entries(tapped).filter(([i,v])=>v&&words[i].isNoun).length;const hTap=(i)=>{if(tapped[i]!==undefined)return;setTapped(p=>({...p,[i]:true}));if(words[i].isNoun&&score+1===total){setShowC(true);setTimeout(()=>setShowC(false),2500);}};return<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#E8EAF6 0%,#C5CAE9 100%)",padding:"16px 12px"}}><ConfettiEffect show={showC}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><button onClick={onBack} style={S.backBtn}>← Menú</button><ScoreBar score={score} total={total}/></div><div style={{maxWidth:500,margin:"0 auto",textAlign:"center"}}><span style={{background:"#3F51B5",color:"white",padding:"6px 20px",borderRadius:20,fontSize:16,fontWeight:700}}>📝 Sustantivos</span><div style={{background:"white",borderRadius:20,padding:16,margin:"12px 0",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}><p style={{fontSize:16,color:"#555",marginBottom:4}}>Los sustantivos nombran personas, animales, lugares u objetos.</p><p style={{fontSize:18,fontWeight:700,color:"#3F51B5"}}>¡Toca solo los sustantivos!</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>{words.map((w,i)=>{const t=tapped[i];let bg="white",bc="#3F51B5";if(t){if(w.isNoun){bg="#C8E6C9";bc="#4CAF50";}else{bg="#FFCDD2";bc="#F44336";}}return<button key={i} onClick={()=>hTap(i)} disabled={t!==undefined} style={{padding:"14px 8px",borderRadius:16,fontSize:20,fontWeight:600,border:`3px solid ${bc}`,background:bg,color:"#333",cursor:t?"default":"pointer",textTransform:"capitalize"}}>{w.word}</button>})}</div>{score===total&&<div style={{marginTop:20,fontSize:28}}>🎉 ¡Encontraste todos!</div>}</div></div>;}
+
+function MainMenu({onSelect}){const acts=[{id:"vowels",emoji:"🔤",title:"Vocales",desc:"A E I O U",color:"#FF6B6B"},{id:"syl-M",emoji:"Ⓜ️",title:"Sílabas M",desc:"MA ME MI MO MU",color:"#FF6B6B"},{id:"syl-P",emoji:"🅿️",title:"Sílabas P",desc:"PA PE PI PO PU",color:"#4ECDC4"},{id:"syl-L",emoji:"📝",title:"Sílabas L",desc:"LA LE LI LO LU",color:"#FFD93D"},{id:"syl-S",emoji:"⭐",title:"Sílabas S",desc:"SA SE SI SO SU",color:"#6C5CE7"},{id:"syl-T",emoji:"🌮",title:"Sílabas T",desc:"TA TE TI TO TU",color:"#E91E63"},{id:"syl-N",emoji:"☁️",title:"Sílabas N",desc:"NA NE NI NO NU",color:"#00BCD4"},{id:"syl-D",emoji:"🎲",title:"Sílabas D",desc:"DA DE DI DO DU",color:"#FF9800"},{id:"syl-F",emoji:"🔥",title:"Sílabas F",desc:"FA FE FI FO FU",color:"#8BC34A"},{id:"reading",emoji:"📖",title:"Comprensión",desc:"Lee y responde",color:"#4CAF50"},{id:"words",emoji:"🧩",title:"Forma palabras",desc:"Usa las tarjetas",color:"#FF9800"},{id:"imgword",emoji:"🖼️",title:"Imagen-Palabra",desc:"¿Qué palabra es?",color:"#1976D2"},{id:"semantic",emoji:"🔍",title:"El intruso",desc:"Campos semánticos",color:"#9C27B0"},{id:"nouns",emoji:"📝",title:"Sustantivos",desc:"Encuentra nombres",color:"#3F51B5"}];return<div style={{minHeight:"100vh",background:"linear-gradient(180deg,#667eea 0%,#764ba2 100%)",padding:"20px 12px"}}><div style={{textAlign:"center",marginBottom:16,paddingTop:8}}><div style={{fontSize:44,marginBottom:4}}>✨</div><h1 style={{fontSize:28,color:"white",margin:0,textShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>Magic Words</h1><p style={{fontSize:14,color:"rgba(255,255,255,0.85)",margin:"4px 0 0"}}>Primer grado — Elige una actividad</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,maxWidth:480,margin:"0 auto",paddingBottom:20}}>{acts.map(a=><button key={a.id} onClick={()=>onSelect(a.id)} style={{background:"white",borderRadius:18,padding:"12px 10px",border:"none",cursor:"pointer",textAlign:"center",boxShadow:"0 4px 16px rgba(0,0,0,0.1)",display:"flex",flexDirection:"column",alignItems:"center",gap:4}}><span style={{fontSize:32}}>{a.emoji}</span><span style={{fontSize:15,fontWeight:700,color:a.color}}>{a.title}</span><span style={{fontSize:11,color:"#999",background:`${a.color}15`,padding:"2px 8px",borderRadius:10}}>{a.desc}</span></button>)}</div></div>;}
+
+function App(){const[screen,setScreen]=useState("menu");return<div style={{fontFamily:"'Fredoka',sans-serif",touchAction:"manipulation",userSelect:"none",WebkitUserSelect:"none"}}><style>{`@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:'Fredoka',sans-serif}body{overscroll-behavior:none}@keyframes popStar{0%{transform:scale(0);opacity:1}50%{transform:scale(1.5);opacity:1}100%{transform:scale(2);opacity:0}}@keyframes popIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}button{font-family:'Fredoka',sans-serif}`}</style>
+{screen==="menu"&&<MainMenu onSelect={setScreen}/>}
+{screen==="vowels"&&<VowelFinder onBack={()=>setScreen("menu")}/>}
+{screen==="syl-M"&&<SyllableComplete letter="M" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-P"&&<SyllableComplete letter="P" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-L"&&<SyllableComplete letter="L" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-S"&&<SyllableComplete letter="S" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-T"&&<SyllableComplete letter="T" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-N"&&<SyllableComplete letter="N" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-D"&&<SyllableComplete letter="D" onBack={()=>setScreen("menu")}/>}
+{screen==="syl-F"&&<SyllableComplete letter="F" onBack={()=>setScreen("menu")}/>}
+{screen==="reading"&&<ReadingComp onBack={()=>setScreen("menu")}/>}
+{screen==="words"&&<WordBuilder onBack={()=>setScreen("menu")}/>}
+{screen==="imgword"&&<ImageWordMatch onBack={()=>setScreen("menu")}/>}
+{screen==="semantic"&&<SemanticFields onBack={()=>setScreen("menu")}/>}
+{screen==="nouns"&&<NounGame onBack={()=>setScreen("menu")}/>}
+</div>;}
+
+const S={backBtn:{background:"rgba(255,255,255,0.85)",border:"none",borderRadius:16,padding:"8px 16px",fontSize:16,fontWeight:600,cursor:"pointer",color:"#555",boxShadow:"0 2px 8px rgba(0,0,0,0.1)"},primaryBtn:{border:"none",borderRadius:20,padding:"14px 32px",fontSize:18,fontWeight:700,color:"white",cursor:"pointer",boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}};
+
+const root=ReactDOM.createRoot(document.getElementById('root'));root.render(React.createElement(App));
+setTimeout(()=>{const s=document.getElementById('splash');if(s){s.classList.add('hide');setTimeout(()=>s.remove(),500);}},300);
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}let dp;window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();dp=e;setTimeout(()=>{if(dp){const b=document.createElement('button');b.textContent='📲 Instalar App';b.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:14px 28px;border:none;border-radius:20px;background:#667eea;color:white;font-size:18px;font-weight:700;font-family:Fredoka,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,0.3);cursor:pointer;';b.onclick=async()=>{dp.prompt();await dp.userChoice;dp=null;b.remove();};document.body.appendChild(b);setTimeout(()=>b.remove(),10000);}},3000);});</script>
+</body></html>
